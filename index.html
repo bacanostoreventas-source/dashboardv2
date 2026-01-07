@@ -98,7 +98,66 @@
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
         .nav-item.active { background: var(--emerald-bg); color: var(--emerald); font-weight: 500; }
         .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
-        
+
+        /* Nav Sections */
+        .nav-section {
+            margin-bottom: 20px;
+        }
+        .nav-section-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-left: 8px;
+            font-weight: 600;
+        }
+
+        /* Upload Source Cards */
+        .upload-source {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .upload-source-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .upload-source-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .upload-source-icon.dropi {
+            background: linear-gradient(135deg, #10B981, #059669);
+        }
+        .upload-source-icon.shopify {
+            background: linear-gradient(135deg, #96bf48, #5a8f00);
+        }
+        .upload-source-name {
+            font-size: 13px;
+            font-weight: 600;
+            flex: 1;
+        }
+        .upload-status {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+        }
+        .upload-status.loaded {
+            background: var(--emerald-bg);
+            color: var(--emerald);
+        }
+
         /* Upload Section in Sidebar */
         .sidebar-upload {
             margin-top: 20px;
@@ -544,40 +603,78 @@
                 </div>
             </div>
             
-            <ul class="nav-menu">
-                <li class="nav-item active" onclick="showTab('resumen')">
-                    <span class="icon">📊</span> Resumen General
-                </li>
-                <li class="nav-item" onclick="showTab('pedidos')">
-                    <span class="icon">📦</span> Detalle Pedidos
-                </li>
-                <li class="nav-item" onclick="showTab('estatus')">
-                    <span class="icon">🚚</span> Por Estatus
-                </li>
-                <li class="nav-item" onclick="showTab('productos')">
-                    <span class="icon">🛍️</span> Productos
-                </li>
-                <li class="nav-item" onclick="showTab('ciudades')">
-                    <span class="icon">📍</span> Ciudades
-                </li>
-                <li class="nav-item" onclick="showTab('transportadoras')">
-                    <span class="icon">🚛</span> Transportadoras
-                </li>
-                <li class="nav-item" onclick="showTab('rentabilidad')">
-                    <span class="icon">💰</span> Rentabilidad
-                </li>
-            </ul>
-            
+            <!-- Sección DROPI -->
+            <div class="nav-section">
+                <h3 class="nav-section-title">📊 DROPI</h3>
+                <ul class="nav-menu">
+                    <li class="nav-item active" onclick="showTab('resumen')">
+                        <span class="icon">📈</span> Resumen General
+                    </li>
+                    <li class="nav-item" onclick="showTab('pedidos')">
+                        <span class="icon">📦</span> Detalle Pedidos
+                    </li>
+                    <li class="nav-item" onclick="showTab('estatus')">
+                        <span class="icon">🚚</span> Por Estatus
+                    </li>
+                    <li class="nav-item" onclick="showTab('productos')">
+                        <span class="icon">🛍️</span> Productos
+                    </li>
+                    <li class="nav-item" onclick="showTab('ciudades')">
+                        <span class="icon">📍</span> Ciudades
+                    </li>
+                    <li class="nav-item" onclick="showTab('transportadoras')">
+                        <span class="icon">🚛</span> Transportadoras
+                    </li>
+                    <li class="nav-item" onclick="showTab('rentabilidad')">
+                        <span class="icon">💰</span> Rentabilidad
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Sección SHOPIFY -->
+            <div class="nav-section">
+                <h3 class="nav-section-title">🛒 SHOPIFY</h3>
+                <ul class="nav-menu">
+                    <li class="nav-item" onclick="showTab('shopify-resumen')">
+                        <span class="icon">📈</span> Resumen Ventas
+                    </li>
+                    <li class="nav-item" onclick="showTab('shopify-pedidos')">
+                        <span class="icon">🧾</span> Pedidos
+                    </li>
+                    <li class="nav-item" onclick="showTab('shopify-productos')">
+                        <span class="icon">🏷️</span> Productos
+                    </li>
+                    <li class="nav-item" onclick="showTab('shopify-clientes')">
+                        <span class="icon">👥</span> Clientes
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Sección Cargar Datos -->
             <div class="sidebar-upload">
                 <h3>Cargar Datos</h3>
-                <label class="upload-btn" id="dropiUploadBtn">
-                    <input type="file" accept=".xlsx,.xls" onchange="loadFile(this, 'dropi')">
-                    📊 Reporte DROPI
-                </label>
-                <label class="upload-btn" id="shopifyUploadBtn">
-                    <input type="file" accept=".xlsx,.xls" onchange="loadFile(this, 'shopify')">
-                    🛒 Pedidos SHOPIFY
-                </label>
+                <div class="upload-source">
+                    <div class="upload-source-header">
+                        <span class="upload-source-icon dropi">📊</span>
+                        <span class="upload-source-name">Dropi</span>
+                        <span class="upload-status" id="dropiStatus">Sin datos</span>
+                    </div>
+                    <label class="upload-btn" id="dropiUploadBtn">
+                        <input type="file" accept=".xlsx,.xls" onchange="loadFile(this, 'dropi')">
+                        📁 Cargar Excel Dropi
+                    </label>
+                </div>
+                <div class="upload-source">
+                    <div class="upload-source-header">
+                        <span class="upload-source-icon shopify">🛒</span>
+                        <span class="upload-source-name">Shopify</span>
+                        <span class="upload-status" id="shopifyStatus">Sin datos</span>
+                    </div>
+                    <label class="upload-btn" id="shopifyUploadBtn">
+                        <input type="file" accept=".xlsx,.xls,.csv" onchange="loadFile(this, 'shopify')">
+                        📁 Cargar Excel Shopify
+                    </label>
+                </div>
             </div>
         </aside>
         
@@ -646,8 +743,20 @@
             <div id="content">
                 <div class="empty-state">
                     <div class="icon">📁</div>
-                    <h3>Sube tu reporte de Dropi</h3>
-                    <p>Carga tu archivo Excel para ver el análisis completo</p>
+                    <h3>Carga tus datos para comenzar</h3>
+                    <p>Sube archivos de Dropi o Shopify desde el panel lateral para ver tus KPIs</p>
+                    <div style="display:flex;gap:15px;justify-content:center;margin-top:20px">
+                        <div style="background:var(--bg-secondary);padding:20px;border-radius:12px;text-align:center;border:1px solid var(--border)">
+                            <div style="font-size:32px;margin-bottom:10px">📊</div>
+                            <strong style="color:var(--emerald)">Dropi</strong>
+                            <p style="font-size:12px;color:var(--text-muted);margin-top:5px">Reportes de pedidos</p>
+                        </div>
+                        <div style="background:var(--bg-secondary);padding:20px;border-radius:12px;text-align:center;border:1px solid var(--border)">
+                            <div style="font-size:32px;margin-bottom:10px">🛒</div>
+                            <strong style="color:#96bf48">Shopify</strong>
+                            <p style="font-size:12px;color:var(--text-muted);margin-top:5px">Exportacion de pedidos</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -672,11 +781,13 @@
         // Global state
         let dropiData = null;
         let shopifyData = null;
+        let shopifyProcessed = null;
         let filteredData = null;
+        let filteredShopifyData = null;
         let currentTab = 'resumen';
         let currentPage = 1;
         const itemsPerPage = 20;
-        
+
         // Charts instances
         let charts = {};
         
@@ -697,14 +808,20 @@
                         dropiData = processDropiData(data);
                         filteredData = [...dropiData.orders];
                         document.getElementById('dropiUploadBtn').classList.add('loaded');
-                        document.getElementById('dropiUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'dropi\')">✓ Dropi cargado';
+                        document.getElementById('dropiUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'dropi\')">✓ Cargado';
+                        document.getElementById('dropiStatus').textContent = `${data.length} registros`;
+                        document.getElementById('dropiStatus').classList.add('loaded');
                         populateFilters();
                     } else {
                         shopifyData = data;
+                        shopifyProcessed = processShopifyData(data);
+                        filteredShopifyData = [...shopifyProcessed.orders];
                         document.getElementById('shopifyUploadBtn').classList.add('loaded');
-                        document.getElementById('shopifyUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'shopify\')">✓ Shopify cargado';
+                        document.getElementById('shopifyUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls,.csv" onchange="loadFile(this, \'shopify\')">✓ Cargado';
+                        document.getElementById('shopifyStatus').textContent = `${data.length} registros`;
+                        document.getElementById('shopifyStatus').classList.add('loaded');
                     }
-                    
+
                     renderContent();
                 } catch (error) {
                     alert('Error al procesar: ' + error.message);
@@ -765,7 +882,158 @@
             
             return { orders, stats };
         }
-        
+
+        // Process Shopify data
+        function processShopifyData(data) {
+            const orders = data.map((row, idx) => {
+                // Parse date - Shopify typically uses formats like "2024-01-15" or "January 15, 2024"
+                let fecha = row['Created at'] || row['Date'] || row['Fecha'] || row['created_at'];
+                if (fecha) {
+                    if (typeof fecha === 'number') {
+                        fecha = new Date((fecha - 25569) * 86400 * 1000);
+                    } else if (typeof fecha === 'string') {
+                        fecha = new Date(fecha);
+                    }
+                }
+
+                // Parse financial values - handle different currency formats
+                const parseAmount = (val) => {
+                    if (!val) return 0;
+                    if (typeof val === 'number') return val;
+                    return parseFloat(String(val).replace(/[^0-9.-]/g, '')) || 0;
+                };
+
+                return {
+                    id: idx + 1,
+                    orderId: row['Name'] || row['Order'] || row['#'] || row['id'] || '',
+                    fecha: fecha,
+                    fechaStr: row['Created at'] || row['Date'] || row['Fecha'] || '',
+                    cliente: row['Billing Name'] || row['Customer'] || row['Cliente'] || row['Shipping Name'] || '',
+                    email: row['Email'] || row['email'] || '',
+                    telefono: row['Billing Phone'] || row['Phone'] || row['Shipping Phone'] || '',
+                    ciudad: row['Billing City'] || row['Shipping City'] || row['Ciudad'] || '',
+                    pais: row['Billing Country'] || row['Shipping Country'] || row['País'] || '',
+                    direccion: row['Billing Address1'] || row['Shipping Address1'] || row['Dirección'] || '',
+                    estatus: row['Financial Status'] || row['Payment Status'] || row['Fulfillment Status'] || row['Estatus'] || 'pending',
+                    fulfillmentStatus: row['Fulfillment Status'] || row['Estado Envío'] || '',
+                    total: parseAmount(row['Total'] || row['total'] || 0),
+                    subtotal: parseAmount(row['Subtotal'] || row['subtotal'] || 0),
+                    descuento: parseAmount(row['Discount Amount'] || row['Discount'] || row['Descuento'] || 0),
+                    envio: parseAmount(row['Shipping'] || row['Envío'] || 0),
+                    impuestos: parseAmount(row['Taxes'] || row['Tax'] || row['Impuestos'] || 0),
+                    producto: row['Lineitem name'] || row['Product'] || row['Producto'] || '',
+                    sku: row['Lineitem sku'] || row['SKU'] || row['sku'] || '',
+                    cantidad: Number(row['Lineitem quantity'] || row['Quantity'] || row['Cantidad'] || 1),
+                    precioUnitario: parseAmount(row['Lineitem price'] || row['Price'] || row['Precio'] || 0),
+                    metodoEnvio: row['Shipping Method'] || row['Método Envío'] || '',
+                    metodoPago: row['Payment Method'] || row['Gateway'] || row['Método Pago'] || '',
+                    notas: row['Notes'] || row['Note'] || row['Notas'] || '',
+                    tags: row['Tags'] || row['tags'] || '',
+                    moneda: row['Currency'] || row['currency'] || 'COP'
+                };
+            });
+
+            const stats = calculateShopifyStats(orders);
+            return { orders, stats };
+        }
+
+        function calculateShopifyStats(orders) {
+            const total = orders.length;
+
+            // Unique orders (by orderId)
+            const uniqueOrderIds = [...new Set(orders.map(o => o.orderId))];
+            const totalOrders = uniqueOrderIds.length;
+
+            // Financial metrics
+            const ventasTotales = orders.reduce((sum, o) => sum + o.total, 0);
+            const subtotalTotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
+            const descuentoTotal = orders.reduce((sum, o) => sum + o.descuento, 0);
+            const envioTotal = orders.reduce((sum, o) => sum + o.envio, 0);
+
+            // Status breakdown
+            const porEstatus = {};
+            orders.forEach(o => {
+                const status = o.estatus || 'unknown';
+                if (!porEstatus[status]) porEstatus[status] = { count: 0, total: 0, orders: [] };
+                porEstatus[status].count++;
+                porEstatus[status].total += o.total;
+                porEstatus[status].orders.push(o);
+            });
+
+            // Fulfillment status
+            const porFulfillment = {};
+            orders.forEach(o => {
+                const status = o.fulfillmentStatus || 'unfulfilled';
+                if (!porFulfillment[status]) porFulfillment[status] = { count: 0, total: 0 };
+                porFulfillment[status].count++;
+                porFulfillment[status].total += o.total;
+            });
+
+            // Por producto
+            const porProducto = {};
+            orders.forEach(o => {
+                if (!o.producto) return;
+                if (!porProducto[o.producto]) {
+                    porProducto[o.producto] = { count: 0, ventas: 0, cantidad: 0, orders: [] };
+                }
+                porProducto[o.producto].count++;
+                porProducto[o.producto].ventas += o.total;
+                porProducto[o.producto].cantidad += o.cantidad;
+                porProducto[o.producto].orders.push(o);
+            });
+
+            // Por ciudad
+            const porCiudad = {};
+            orders.forEach(o => {
+                if (!o.ciudad) return;
+                if (!porCiudad[o.ciudad]) {
+                    porCiudad[o.ciudad] = { count: 0, total: 0, orders: [] };
+                }
+                porCiudad[o.ciudad].count++;
+                porCiudad[o.ciudad].total += o.total;
+                porCiudad[o.ciudad].orders.push(o);
+            });
+
+            // Por cliente
+            const porCliente = {};
+            orders.forEach(o => {
+                const cliente = o.email || o.cliente || 'unknown';
+                if (!porCliente[cliente]) {
+                    porCliente[cliente] = { count: 0, total: 0, nombre: o.cliente, orders: [] };
+                }
+                porCliente[cliente].count++;
+                porCliente[cliente].total += o.total;
+                porCliente[cliente].orders.push(o);
+            });
+
+            // Ticket promedio
+            const ticketPromedio = totalOrders > 0 ? ventasTotales / totalOrders : 0;
+
+            // Paid orders
+            const paidOrders = orders.filter(o =>
+                o.estatus.toLowerCase() === 'paid' ||
+                o.estatus.toLowerCase() === 'pagado' ||
+                o.estatus.toLowerCase() === 'completed'
+            );
+            const ventasPagadas = paidOrders.reduce((sum, o) => sum + o.total, 0);
+
+            return {
+                total,
+                totalOrders,
+                ventasTotales,
+                ventasPagadas,
+                subtotalTotal,
+                descuentoTotal,
+                envioTotal,
+                ticketPromedio,
+                porEstatus,
+                porFulfillment,
+                porProducto,
+                porCiudad,
+                porCliente
+            };
+        }
+
         function calculateStats(orders) {
             const total = orders.length;
             const entregados = orders.filter(o => o.estatus === 'ENTREGADO');
@@ -969,33 +1237,94 @@
         function showTab(tab) {
             currentTab = tab;
             currentPage = 1;
-            
+
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             event.target.closest('.nav-item').classList.add('active');
-            
+
             const titles = {
-                resumen: ['Resumen General', 'Vista general de tu negocio'],
-                pedidos: ['Detalle de Pedidos', 'Lista completa de todos los pedidos'],
-                estatus: ['Análisis por Estatus', 'Desglose por estado de los pedidos'],
-                productos: ['Análisis de Productos', 'Rendimiento por producto'],
-                ciudades: ['Análisis por Ciudad', 'Rendimiento por ubicación'],
-                transportadoras: ['Transportadoras', 'Efectividad por transportadora'],
-                rentabilidad: ['Rentabilidad', 'Análisis financiero detallado']
+                resumen: ['Resumen General', 'Vista general de tu negocio - Dropi'],
+                pedidos: ['Detalle de Pedidos', 'Lista completa de todos los pedidos - Dropi'],
+                estatus: ['Análisis por Estatus', 'Desglose por estado de los pedidos - Dropi'],
+                productos: ['Análisis de Productos', 'Rendimiento por producto - Dropi'],
+                ciudades: ['Análisis por Ciudad', 'Rendimiento por ubicación - Dropi'],
+                transportadoras: ['Transportadoras', 'Efectividad por transportadora - Dropi'],
+                rentabilidad: ['Rentabilidad', 'Análisis financiero detallado - Dropi'],
+                'shopify-resumen': ['Resumen de Ventas', 'KPIs principales de Shopify'],
+                'shopify-pedidos': ['Pedidos Shopify', 'Lista de pedidos de tu tienda'],
+                'shopify-productos': ['Productos Shopify', 'Rendimiento de productos'],
+                'shopify-clientes': ['Clientes Shopify', 'Análisis de clientes']
             };
-            
-            document.getElementById('pageTitle').textContent = titles[tab][0];
-            document.getElementById('pageSubtitle').textContent = titles[tab][1];
-            
+
+            const titleData = titles[tab] || ['Dashboard', 'Vista general'];
+            document.getElementById('pageTitle').textContent = titleData[0];
+            document.getElementById('pageSubtitle').textContent = titleData[1];
+
+            // Show/hide filters based on tab type
+            const filtersBar = document.getElementById('filtersBar');
+            if (tab.startsWith('shopify-')) {
+                filtersBar.style.display = 'none';
+            } else {
+                filtersBar.style.display = 'flex';
+            }
+
             renderContent();
         }
         
         // Render content
         function renderContent() {
-            if (!dropiData) return;
-            
-            const stats = calculateStats(filteredData);
             let html = '';
-            
+
+            // Handle Shopify tabs
+            if (currentTab.startsWith('shopify-')) {
+                if (!shopifyProcessed) {
+                    html = `
+                        <div class="empty-state">
+                            <div class="icon">🛒</div>
+                            <h3>Carga tus datos de Shopify</h3>
+                            <p>Sube tu archivo de exportación de Shopify para ver los KPIs</p>
+                        </div>
+                    `;
+                    document.getElementById('content').innerHTML = html;
+                    return;
+                }
+
+                const shopifyStats = calculateShopifyStats(filteredShopifyData || shopifyProcessed.orders);
+
+                switch(currentTab) {
+                    case 'shopify-resumen':
+                        html = renderShopifyResumen(shopifyStats);
+                        break;
+                    case 'shopify-pedidos':
+                        html = renderShopifyPedidos(shopifyStats);
+                        break;
+                    case 'shopify-productos':
+                        html = renderShopifyProductos(shopifyStats);
+                        break;
+                    case 'shopify-clientes':
+                        html = renderShopifyClientes(shopifyStats);
+                        break;
+                }
+
+                document.getElementById('content').innerHTML = html;
+                setTimeout(() => initShopifyCharts(shopifyStats), 100);
+                return;
+            }
+
+            // Handle Dropi tabs
+            if (!dropiData) {
+                html = `
+                    <div class="empty-state">
+                        <div class="icon">📊</div>
+                        <h3>Carga tus datos de Dropi</h3>
+                        <p>Sube tu archivo Excel de Dropi para ver el análisis completo</p>
+                    </div>
+                `;
+                document.getElementById('content').innerHTML = html;
+                return;
+            }
+
+            const stats = calculateStats(filteredData);
+
             switch(currentTab) {
                 case 'resumen':
                     html = renderResumen(stats);
@@ -1019,9 +1348,9 @@
                     html = renderRentabilidad(stats);
                     break;
             }
-            
+
             document.getElementById('content').innerHTML = html;
-            
+
             // Initialize charts after DOM update
             setTimeout(() => initCharts(stats), 100);
         }
@@ -1551,7 +1880,469 @@
                 </div>
             `;
         }
-        
+
+        // ========== SHOPIFY RENDER FUNCTIONS ==========
+
+        function renderShopifyResumen(stats) {
+            const paidCount = stats.porEstatus['paid']?.count || 0;
+            const pendingCount = stats.porEstatus['pending']?.count || 0;
+            const refundedCount = stats.porEstatus['refunded']?.count || 0;
+
+            return `
+                <div class="kpi-grid">
+                    <div class="kpi-card blue">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">🧾</div>
+                        </div>
+                        <div class="kpi-label">Total Pedidos</div>
+                        <div class="kpi-value">${formatNumber(stats.totalOrders)}</div>
+                        <div class="kpi-subtitle">${formatNumber(stats.total)} líneas de producto</div>
+                    </div>
+                    <div class="kpi-card emerald">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">💰</div>
+                        </div>
+                        <div class="kpi-label">Ventas Totales</div>
+                        <div class="kpi-value">${formatCOP(stats.ventasTotales)}</div>
+                        <div class="kpi-subtitle">Todos los pedidos</div>
+                    </div>
+                    <div class="kpi-card violet">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">🎫</div>
+                        </div>
+                        <div class="kpi-label">Ticket Promedio</div>
+                        <div class="kpi-value">${formatCOP(stats.ticketPromedio)}</div>
+                        <div class="kpi-subtitle">Por pedido</div>
+                    </div>
+                    <div class="kpi-card amber">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">🏷️</div>
+                        </div>
+                        <div class="kpi-label">Descuentos</div>
+                        <div class="kpi-value">${formatCOP(stats.descuentoTotal)}</div>
+                        <div class="kpi-subtitle">Total otorgado</div>
+                    </div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card emerald">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">✅</div>
+                        </div>
+                        <div class="kpi-label">Pagados</div>
+                        <div class="kpi-value">${formatNumber(paidCount)}</div>
+                        <div class="kpi-subtitle">${formatCOP(stats.porEstatus['paid']?.total || 0)}</div>
+                    </div>
+                    <div class="kpi-card amber">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">⏳</div>
+                        </div>
+                        <div class="kpi-label">Pendientes</div>
+                        <div class="kpi-value">${formatNumber(pendingCount)}</div>
+                        <div class="kpi-subtitle">${formatCOP(stats.porEstatus['pending']?.total || 0)}</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">↩️</div>
+                        </div>
+                        <div class="kpi-label">Reembolsados</div>
+                        <div class="kpi-value">${formatNumber(refundedCount)}</div>
+                        <div class="kpi-subtitle">${formatCOP(stats.porEstatus['refunded']?.total || 0)}</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">🚚</div>
+                        </div>
+                        <div class="kpi-label">Costo Envío</div>
+                        <div class="kpi-value">${formatCOP(stats.envioTotal)}</div>
+                        <div class="kpi-subtitle">Total cobrado</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">📊 Estado de Pagos</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="shopifyStatusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">📍 Top Ciudades</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="shopifyCitiesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <span class="chart-title">🛍️ Top Productos por Ventas</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="shopifyProductsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderShopifyPedidos(stats) {
+            const orders = filteredShopifyData || shopifyProcessed.orders;
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageData = orders.slice(startIdx, endIdx);
+            const totalPages = Math.ceil(orders.length / itemsPerPage);
+
+            return `
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">
+                            Pedidos de Shopify
+                            <span class="table-badge">${formatNumber(orders.length)} registros</span>
+                        </div>
+                        <input type="text" class="table-search" placeholder="🔍 Buscar por cliente, pedido..." oninput="searchShopifyTable(this.value)">
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="shopifyOrdersTable">
+                            <thead>
+                                <tr>
+                                    <th>Pedido</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Ciudad</th>
+                                    <th>Producto</th>
+                                    <th>Total</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pageData.map(o => `
+                                    <tr class="clickable" ondblclick="showShopifyOrderDetail(${o.id})">
+                                        <td><strong>${o.orderId}</strong></td>
+                                        <td>${o.fechaStr || '-'}</td>
+                                        <td>${o.cliente || '-'}</td>
+                                        <td>${o.ciudad || '-'}</td>
+                                        <td>${(o.producto || '').substring(0, 25)}${(o.producto || '').length > 25 ? '...' : ''}</td>
+                                        <td><strong>${formatCOP(o.total)}</strong></td>
+                                        <td><span class="status-badge ${getShopifyStatusClass(o.estatus)}">${o.estatus}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <span class="pagination-info">Mostrando ${startIdx + 1}-${Math.min(endIdx, orders.length)} de ${formatNumber(orders.length)}</span>
+                        <div class="pagination-btns">
+                            <button class="page-btn" onclick="goToShopifyPage(1)" ${currentPage === 1 ? 'disabled' : ''}>««</button>
+                            <button class="page-btn" onclick="goToShopifyPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>«</button>
+                            ${generatePaginationButtons(currentPage, totalPages)}
+                            <button class="page-btn" onclick="goToShopifyPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>»</button>
+                            <button class="page-btn" onclick="goToShopifyPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>»»</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderShopifyProductos(stats) {
+            const productosArray = Object.entries(stats.porProducto)
+                .map(([name, data]) => ({ name, ...data }))
+                .sort((a, b) => b.ventas - a.ventas)
+                .slice(0, 25);
+
+            return `
+                <div class="kpi-grid">
+                    <div class="kpi-card blue">
+                        <div class="kpi-icon">📦</div>
+                        <div class="kpi-label">Total Productos</div>
+                        <div class="kpi-value">${Object.keys(stats.porProducto).length}</div>
+                    </div>
+                    <div class="kpi-card emerald">
+                        <div class="kpi-icon">🏆</div>
+                        <div class="kpi-label">Producto Top</div>
+                        <div class="kpi-value" style="font-size:16px">${productosArray[0]?.name.substring(0, 20) || '-'}</div>
+                        <div class="kpi-subtitle">${formatCOP(productosArray[0]?.ventas || 0)}</div>
+                    </div>
+                    <div class="kpi-card violet">
+                        <div class="kpi-icon">📊</div>
+                        <div class="kpi-label">Unidades Vendidas</div>
+                        <div class="kpi-value">${formatNumber(productosArray.reduce((s, p) => s + p.cantidad, 0))}</div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">
+                            Productos por Ventas
+                            <span class="table-badge">${productosArray.length} productos</span>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Producto</th>
+                                <th>Pedidos</th>
+                                <th>Unidades</th>
+                                <th>Ventas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productosArray.map((p, idx) => `
+                                <tr>
+                                    <td>${idx + 1}</td>
+                                    <td><strong>${p.name.substring(0, 40)}${p.name.length > 40 ? '...' : ''}</strong></td>
+                                    <td>${formatNumber(p.count)}</td>
+                                    <td>${formatNumber(p.cantidad)}</td>
+                                    <td style="color:var(--emerald)"><strong>${formatCOP(p.ventas)}</strong></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderShopifyClientes(stats) {
+            const clientesArray = Object.entries(stats.porCliente)
+                .map(([email, data]) => ({ email, ...data }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 30);
+
+            const clientesRecurrentes = clientesArray.filter(c => c.count > 1).length;
+            const totalClientes = Object.keys(stats.porCliente).length;
+
+            return `
+                <div class="kpi-grid">
+                    <div class="kpi-card blue">
+                        <div class="kpi-icon">👥</div>
+                        <div class="kpi-label">Total Clientes</div>
+                        <div class="kpi-value">${formatNumber(totalClientes)}</div>
+                    </div>
+                    <div class="kpi-card emerald">
+                        <div class="kpi-icon">🔄</div>
+                        <div class="kpi-label">Recurrentes</div>
+                        <div class="kpi-value">${formatNumber(clientesRecurrentes)}</div>
+                        <div class="kpi-subtitle">${totalClientes > 0 ? ((clientesRecurrentes / totalClientes) * 100).toFixed(1) : 0}% del total</div>
+                    </div>
+                    <div class="kpi-card violet">
+                        <div class="kpi-icon">💎</div>
+                        <div class="kpi-label">Mejor Cliente</div>
+                        <div class="kpi-value" style="font-size:16px">${clientesArray[0]?.nombre?.substring(0, 15) || clientesArray[0]?.email?.substring(0, 15) || '-'}</div>
+                        <div class="kpi-subtitle">${formatCOP(clientesArray[0]?.total || 0)}</div>
+                    </div>
+                    <div class="kpi-card amber">
+                        <div class="kpi-icon">🎫</div>
+                        <div class="kpi-label">Valor Promedio/Cliente</div>
+                        <div class="kpi-value">${formatCOP(totalClientes > 0 ? stats.ventasTotales / totalClientes : 0)}</div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">
+                            Top Clientes por Valor
+                            <span class="table-badge">${clientesArray.length} clientes</span>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Cliente</th>
+                                <th>Email</th>
+                                <th>Pedidos</th>
+                                <th>Total Gastado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${clientesArray.map((c, idx) => `
+                                <tr>
+                                    <td>${idx + 1}</td>
+                                    <td><strong>${c.nombre || '-'}</strong></td>
+                                    <td style="color:var(--text-muted)">${c.email !== 'unknown' ? c.email : '-'}</td>
+                                    <td>${c.count > 1 ? `<span class="status-badge entregado">${c.count} pedidos</span>` : '1 pedido'}</td>
+                                    <td style="color:var(--emerald)"><strong>${formatCOP(c.total)}</strong></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getShopifyStatusClass(status) {
+            if (!status) return 'proceso';
+            const s = status.toLowerCase();
+            if (s === 'paid' || s === 'pagado' || s === 'completed') return 'entregado';
+            if (s === 'refunded' || s === 'cancelled' || s === 'cancelado') return 'devolucion';
+            if (s === 'pending' || s === 'pendiente') return 'novedad';
+            if (s === 'fulfilled' || s === 'shipped') return 'transporte';
+            return 'proceso';
+        }
+
+        function searchShopifyTable(query) {
+            if (!shopifyProcessed) return;
+
+            query = query.toLowerCase();
+            filteredShopifyData = shopifyProcessed.orders.filter(o =>
+                (o.cliente || '').toLowerCase().includes(query) ||
+                (o.orderId + '').toLowerCase().includes(query) ||
+                (o.email || '').toLowerCase().includes(query) ||
+                (o.producto || '').toLowerCase().includes(query)
+            );
+
+            currentPage = 1;
+            renderContent();
+        }
+
+        function goToShopifyPage(page) {
+            const orders = filteredShopifyData || shopifyProcessed.orders;
+            const totalPages = Math.ceil(orders.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderContent();
+        }
+
+        function showShopifyOrderDetail(id) {
+            const order = (filteredShopifyData || shopifyProcessed.orders).find(o => o.id === id);
+            if (!order) return;
+
+            document.getElementById('modalTitle').innerHTML = `🛒 Pedido ${order.orderId}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div>
+                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">INFORMACIÓN DEL PEDIDO</h4>
+                        <p><strong>Pedido:</strong> ${order.orderId}</p>
+                        <p><strong>Fecha:</strong> ${order.fechaStr || '-'}</p>
+                        <p><strong>Estado Pago:</strong> <span class="status-badge ${getShopifyStatusClass(order.estatus)}">${order.estatus}</span></p>
+                        <p><strong>Estado Envío:</strong> ${order.fulfillmentStatus || 'Sin asignar'}</p>
+                        <p><strong>Método Pago:</strong> ${order.metodoPago || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">CLIENTE</h4>
+                        <p><strong>Nombre:</strong> ${order.cliente || '-'}</p>
+                        <p><strong>Email:</strong> ${order.email || '-'}</p>
+                        <p><strong>Teléfono:</strong> ${order.telefono || '-'}</p>
+                        <p><strong>Ciudad:</strong> ${order.ciudad || '-'}</p>
+                        <p><strong>País:</strong> ${order.pais || '-'}</p>
+                    </div>
+                </div>
+                <hr style="border-color:var(--border);margin:20px 0">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div>
+                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">PRODUCTO</h4>
+                        <p><strong>Producto:</strong> ${order.producto || '-'}</p>
+                        <p><strong>SKU:</strong> ${order.sku || '-'}</p>
+                        <p><strong>Cantidad:</strong> ${order.cantidad}</p>
+                        <p><strong>Precio Unit.:</strong> ${formatCOP(order.precioUnitario)}</p>
+                    </div>
+                    <div>
+                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">FINANCIERO</h4>
+                        <p><strong>Subtotal:</strong> ${formatCOP(order.subtotal)}</p>
+                        <p><strong>Descuento:</strong> <span style="color:var(--red)">-${formatCOP(order.descuento)}</span></p>
+                        <p><strong>Envío:</strong> ${formatCOP(order.envio)}</p>
+                        <p><strong>Total:</strong> <span style="color:var(--emerald);font-size:18px;font-weight:700">${formatCOP(order.total)}</span></p>
+                    </div>
+                </div>
+                ${order.notas ? `
+                    <hr style="border-color:var(--border);margin:20px 0">
+                    <div style="background:var(--blue-bg);padding:15px;border-radius:10px">
+                        <h4 style="color:var(--blue);font-size:12px;margin-bottom:10px">📝 NOTAS</h4>
+                        <p>${order.notas}</p>
+                    </div>
+                ` : ''}
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function initShopifyCharts(stats) {
+            // Destroy existing charts
+            Object.values(charts).forEach(c => c && c.destroy());
+            charts = {};
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#9ca3af', font: { size: 11 } }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } }
+                }
+            };
+
+            // Status chart
+            const statusCtx = document.getElementById('shopifyStatusChart');
+            if (statusCtx) {
+                const statusData = Object.entries(stats.porEstatus).sort((a, b) => b[1].count - a[1].count);
+                const statusColors = {
+                    'paid': '#10B981',
+                    'pending': '#F59E0B',
+                    'refunded': '#EF4444',
+                    'cancelled': '#EF4444',
+                    'partially_refunded': '#EC4899'
+                };
+                charts.shopifyStatus = new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: statusData.map(s => s[0]),
+                        datasets: [{
+                            data: statusData.map(s => s[1].count),
+                            backgroundColor: statusData.map(s => statusColors[s[0].toLowerCase()] || '#8B5CF6')
+                        }]
+                    },
+                    options: { ...chartOptions, scales: {} }
+                });
+            }
+
+            // Cities chart
+            const citiesCtx = document.getElementById('shopifyCitiesChart');
+            if (citiesCtx) {
+                const citiesData = Object.entries(stats.porCiudad).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
+                charts.shopifyCities = new Chart(citiesCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: citiesData.map(c => c[0].substring(0, 12)),
+                        datasets: [{
+                            label: 'Ventas',
+                            data: citiesData.map(c => c[1].total),
+                            backgroundColor: '#3B82F6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { ...chartOptions, plugins: { legend: { display: false } } }
+                });
+            }
+
+            // Products chart
+            const productsCtx = document.getElementById('shopifyProductsChart');
+            if (productsCtx) {
+                const prodData = Object.entries(stats.porProducto).sort((a, b) => b[1].ventas - a[1].ventas).slice(0, 10);
+                charts.shopifyProducts = new Chart(productsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: prodData.map(p => p[0].substring(0, 20)),
+                        datasets: [{
+                            label: 'Ventas',
+                            data: prodData.map(p => p[1].ventas),
+                            backgroundColor: '#96bf48',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: chartOptions
+                });
+            }
+        }
+
         // Helper functions
         function getStatusClass(status) {
             if (status === 'ENTREGADO') return 'entregado';
