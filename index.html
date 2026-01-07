@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -138,9 +139,6 @@
         .upload-source-icon.dropi {
             background: linear-gradient(135deg, #10B981, #059669);
         }
-        .upload-source-icon.shopify {
-            background: linear-gradient(135deg, #96bf48, #5a8f00);
-        }
         .upload-source-name {
             font-size: 13px;
             font-weight: 600;
@@ -180,7 +178,22 @@
         .upload-btn:hover { border-color: var(--emerald); color: var(--emerald); }
         .upload-btn.loaded { border-color: var(--emerald); background: var(--emerald-bg); color: var(--emerald); border-style: solid; }
         .upload-btn input { display: none; }
-        
+
+        /* Delete Data Button */
+        .delete-data-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--red-bg);
+            border: 1px solid var(--red);
+            border-radius: 8px;
+            color: var(--red);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .delete-data-btn:hover { background: var(--red); color: white; }
+
         /* Main Content */
         .main-content {
             flex: 1;
@@ -589,10 +602,110 @@
         ::-webkit-scrollbar-track { background: var(--bg-primary); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .login-overlay.hidden { display: none; }
+        .login-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+        }
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--emerald), var(--blue));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 25px;
+        }
+        .login-title { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
+        .login-subtitle { color: var(--text-muted); margin-bottom: 35px; font-size: 14px; }
+        .google-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 28px;
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .google-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .google-btn svg { width: 20px; height: 20px; }
+        .login-footer { margin-top: 30px; color: var(--text-muted); font-size: 12px; }
+
+        /* User Info in Sidebar */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-details { flex: 1; overflow: hidden; }
+        .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-email { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .logout-btn {
+            padding: 6px 10px;
+            background: var(--red-bg);
+            border: 1px solid var(--red);
+            border-radius: 6px;
+            color: var(--red);
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        .logout-btn:hover { background: var(--red); color: white; }
     </style>
 </head>
 <body>
-    <div class="app-container">
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-container">
+            <div class="login-logo">📦</div>
+            <h1 class="login-title">Bacano Store</h1>
+            <p class="login-subtitle">Dashboard Dropshipping PRO<br>Inicia sesión para acceder</p>
+            <button class="google-btn" onclick="handleGoogleLogin()">
+                <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Iniciar sesión con Google
+            </button>
+            <p class="login-footer">Solo usuarios autorizados pueden acceder al dashboard</p>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer" style="display: none;">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
@@ -602,7 +715,17 @@
                     <p>Dashboard PRO</p>
                 </div>
             </div>
-            
+
+            <!-- User Info -->
+            <div class="user-info" id="userInfo">
+                <img class="user-avatar" id="userAvatar" src="" alt="Avatar">
+                <div class="user-details">
+                    <div class="user-name" id="userName">Usuario</div>
+                    <div class="user-email" id="userEmail">email@gmail.com</div>
+                </div>
+                <button class="logout-btn" onclick="handleLogout()">Salir</button>
+            </div>
+
             <!-- Sección DROPI -->
             <div class="nav-section">
                 <h3 class="nav-section-title">📊 DROPI</h3>
@@ -631,37 +754,6 @@
                 </ul>
             </div>
 
-            <!-- Sección SHOPIFY -->
-            <div class="nav-section">
-                <h3 class="nav-section-title">🛒 SHOPIFY</h3>
-                <ul class="nav-menu">
-                    <li class="nav-item" onclick="showTab('shopify-resumen')">
-                        <span class="icon">📊</span> Resumen Ejecutivo
-                    </li>
-                    <li class="nav-item" onclick="showTab('shopify-pedidos')">
-                        <span class="icon">🧾</span> Pedidos
-                    </li>
-                    <li class="nav-item" onclick="showTab('shopify-embudo')">
-                        <span class="icon">🎯</span> Embudo/Estados
-                    </li>
-                    <li class="nav-item" onclick="showTab('shopify-productos')">
-                        <span class="icon">🏷️</span> Productos
-                    </li>
-                    <li class="nav-item" onclick="showTab('shopify-clientes')">
-                        <span class="icon">👥</span> Clientes/RFM
-                    </li>
-                    <li class="nav-item" onclick="showTab('shopify-marketing')">
-                        <span class="icon">📢</span> Marketing/Canales
-                    </li>
-                    <li class="nav-item" onclick="showTab('shopify-geo')">
-                        <span class="icon">🌍</span> Geografía
-                    </li>
-                    <li class="nav-item" onclick="showTab('shopify-tendencias')">
-                        <span class="icon">📈</span> Tendencias
-                    </li>
-                </ul>
-            </div>
-
             <!-- Sección Cargar Datos -->
             <div class="sidebar-upload">
                 <h3>Cargar Datos</h3>
@@ -675,17 +767,9 @@
                         <input type="file" accept=".xlsx,.xls" onchange="loadFile(this, 'dropi')">
                         📁 Cargar Excel Dropi
                     </label>
-                </div>
-                <div class="upload-source">
-                    <div class="upload-source-header">
-                        <span class="upload-source-icon shopify">🛒</span>
-                        <span class="upload-source-name">Shopify</span>
-                        <span class="upload-status" id="shopifyStatus">Sin datos</span>
-                    </div>
-                    <label class="upload-btn" id="shopifyUploadBtn">
-                        <input type="file" accept=".xlsx,.xls,.csv" onchange="loadFile(this, 'shopify')">
-                        📁 Cargar Excel Shopify
-                    </label>
+                    <button class="delete-data-btn" id="deleteDataBtn" onclick="clearDropiData()" style="display:none;">
+                        🗑️ Eliminar datos
+                    </button>
                 </div>
             </div>
         </aside>
@@ -756,17 +840,12 @@
                 <div class="empty-state">
                     <div class="icon">📁</div>
                     <h3>Carga tus datos para comenzar</h3>
-                    <p>Sube archivos de Dropi o Shopify desde el panel lateral para ver tus KPIs</p>
+                    <p>Sube tu archivo de Dropi desde el panel lateral para ver tus KPIs</p>
                     <div style="display:flex;gap:15px;justify-content:center;margin-top:20px">
                         <div style="background:var(--bg-secondary);padding:20px;border-radius:12px;text-align:center;border:1px solid var(--border)">
                             <div style="font-size:32px;margin-bottom:10px">📊</div>
                             <strong style="color:var(--emerald)">Dropi</strong>
                             <p style="font-size:12px;color:var(--text-muted);margin-top:5px">Reportes de pedidos</p>
-                        </div>
-                        <div style="background:var(--bg-secondary);padding:20px;border-radius:12px;text-align:center;border:1px solid var(--border)">
-                            <div style="font-size:32px;margin-bottom:10px">🛒</div>
-                            <strong style="color:#96bf48">Shopify</strong>
-                            <p style="font-size:12px;color:var(--text-muted);margin-top:5px">Exportacion de pedidos</p>
                         </div>
                     </div>
                 </div>
@@ -790,24 +869,251 @@
     </div>
 
     <script>
+        // ==================== AUTHENTICATION ====================
+        // Google OAuth Client ID - Replace with your own from Google Cloud Console
+        const GOOGLE_CLIENT_ID = '1000108993082-pthjl5a4tifm0dj37nk41ag70hul6lsb.apps.googleusercontent.com';
+        const AUTH_STORAGE_KEY = 'bacano_auth_user';
+
+        // Current user state
+        let currentUser = null;
+
+        // Check authentication on load
+        function checkAuth() {
+            const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+            if (storedUser) {
+                try {
+                    currentUser = JSON.parse(storedUser);
+                    showDashboard();
+                    return true;
+                } catch (e) {
+                    localStorage.removeItem(AUTH_STORAGE_KEY);
+                }
+            }
+            showLogin();
+            return false;
+        }
+
+        // Handle Google Login
+        function handleGoogleLogin() {
+            // Check if Google API is loaded
+            if (typeof google === 'undefined' || !google.accounts) {
+                alert('Error: No se pudo cargar la API de Google. Por favor, recarga la página.');
+                return;
+            }
+
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse,
+                auto_select: false
+            });
+
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    // Fallback: show the One Tap UI or redirect to Google's OAuth
+                    google.accounts.id.renderButton(
+                        document.createElement('div'),
+                        { theme: 'outline', size: 'large' }
+                    );
+                    // Use popup flow
+                    google.accounts.oauth2.initTokenClient({
+                        client_id: GOOGLE_CLIENT_ID,
+                        scope: 'email profile',
+                        callback: (response) => {
+                            if (response.access_token) {
+                                fetchUserInfo(response.access_token);
+                            }
+                        }
+                    }).requestAccessToken();
+                }
+            });
+        }
+
+        // Handle credential response from Google
+        function handleCredentialResponse(response) {
+            if (response.credential) {
+                const payload = parseJwt(response.credential);
+                loginUser({
+                    name: payload.name,
+                    email: payload.email,
+                    picture: payload.picture
+                });
+            }
+        }
+
+        // Fetch user info with access token
+        function fetchUserInfo(accessToken) {
+            fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                loginUser({
+                    name: data.name,
+                    email: data.email,
+                    picture: data.picture
+                });
+            })
+            .catch(err => {
+                console.error('Error fetching user info:', err);
+                alert('Error al obtener información del usuario');
+            });
+        }
+
+        // Parse JWT token
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        // Login user and save to storage
+        function loginUser(user) {
+            currentUser = user;
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+            showDashboard();
+        }
+
+        // Handle logout
+        function handleLogout() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                currentUser = null;
+                localStorage.removeItem(AUTH_STORAGE_KEY);
+                if (typeof google !== 'undefined' && google.accounts) {
+                    google.accounts.id.disableAutoSelect();
+                }
+                showLogin();
+            }
+        }
+
+        // Show login overlay
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('appContainer').style.display = 'none';
+        }
+
+        // Show dashboard
+        function showDashboard() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('appContainer').style.display = 'flex';
+
+            // Update user info in sidebar
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.name || 'Usuario';
+                document.getElementById('userEmail').textContent = currentUser.email || '';
+                document.getElementById('userAvatar').src = currentUser.picture || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%236b7280"><circle cx="12" cy="8" r="4"/><path d="M12 14c-6.1 0-8 4-8 4v2h16v-2s-1.9-4-8-4z"/></svg>';
+            }
+        }
+
+        // ==================== DASHBOARD STATE ====================
         // Global state
         let dropiData = null;
-        let shopifyData = null;
-        let shopifyProcessed = null;
         let filteredData = null;
-        let filteredShopifyData = null;
         let currentTab = 'resumen';
         let currentPage = 1;
         const itemsPerPage = 20;
 
         // Charts instances
         let charts = {};
-        
+
+        // LocalStorage key
+        const STORAGE_KEY = 'bacano_dropi_data';
+
+        // Save data to LocalStorage
+        function saveToLocalStorage() {
+            if (dropiData) {
+                try {
+                    // Store the raw orders data (serializable)
+                    const dataToStore = {
+                        orders: dropiData.orders.map(o => ({
+                            ...o,
+                            fecha: o.fecha ? o.fecha.toISOString() : null
+                        })),
+                        stats: dropiData.stats,
+                        savedAt: new Date().toISOString()
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore));
+                    console.log('Data saved to LocalStorage');
+                } catch (error) {
+                    console.error('Error saving to LocalStorage:', error);
+                }
+            }
+        }
+
+        // Load data from LocalStorage
+        function loadFromLocalStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    // Restore dates from ISO strings
+                    parsed.orders = parsed.orders.map(o => ({
+                        ...o,
+                        fecha: o.fecha ? new Date(o.fecha) : null
+                    }));
+                    dropiData = parsed;
+                    filteredData = [...dropiData.orders];
+
+                    // Update UI
+                    document.getElementById('dropiUploadBtn').classList.add('loaded');
+                    document.getElementById('dropiUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'dropi\')">✓ Cargado';
+                    document.getElementById('dropiStatus').textContent = `${dropiData.orders.length} registros`;
+                    document.getElementById('dropiStatus').classList.add('loaded');
+                    document.getElementById('deleteDataBtn').style.display = 'block';
+
+                    populateFilters();
+                    renderContent();
+
+                    console.log('Data loaded from LocalStorage');
+                    return true;
+                }
+            } catch (error) {
+                console.error('Error loading from LocalStorage:', error);
+            }
+            return false;
+        }
+
+        // Clear data from LocalStorage
+        function clearDropiData() {
+            if (confirm('¿Estás seguro de que deseas eliminar todos los datos cargados? Esta acción no se puede deshacer.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                dropiData = null;
+                filteredData = null;
+
+                // Reset UI
+                document.getElementById('dropiUploadBtn').classList.remove('loaded');
+                document.getElementById('dropiUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'dropi\')">📁 Cargar Excel Dropi';
+                document.getElementById('dropiStatus').textContent = 'Sin datos';
+                document.getElementById('dropiStatus').classList.remove('loaded');
+                document.getElementById('deleteDataBtn').style.display = 'none';
+
+                // Clear filters
+                clearFilters();
+                renderContent();
+
+                console.log('Data cleared from LocalStorage');
+            }
+        }
+
+        // Initialize on page load
+        function init() {
+            // Check authentication first
+            if (checkAuth()) {
+                // If authenticated, load data from LocalStorage
+                loadFromLocalStorage();
+            }
+        }
+
+        // Run init when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+
         // Load file
         function loadFile(input, type) {
             const file = input.files[0];
             if (!file) return;
-            
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -815,24 +1121,18 @@
                     const sheetName = workbook.SheetNames[0];
                     const sheet = workbook.Sheets[sheetName];
                     const data = XLSX.utils.sheet_to_json(sheet);
-                    
-                    if (type === 'dropi') {
-                        dropiData = processDropiData(data);
-                        filteredData = [...dropiData.orders];
-                        document.getElementById('dropiUploadBtn').classList.add('loaded');
-                        document.getElementById('dropiUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'dropi\')">✓ Cargado';
-                        document.getElementById('dropiStatus').textContent = `${data.length} registros`;
-                        document.getElementById('dropiStatus').classList.add('loaded');
-                        populateFilters();
-                    } else {
-                        shopifyData = data;
-                        shopifyProcessed = processShopifyData(data);
-                        filteredShopifyData = [...shopifyProcessed.orders];
-                        document.getElementById('shopifyUploadBtn').classList.add('loaded');
-                        document.getElementById('shopifyUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls,.csv" onchange="loadFile(this, \'shopify\')">✓ Cargado';
-                        document.getElementById('shopifyStatus').textContent = `${data.length} registros`;
-                        document.getElementById('shopifyStatus').classList.add('loaded');
-                    }
+
+                    dropiData = processDropiData(data);
+                    filteredData = [...dropiData.orders];
+                    document.getElementById('dropiUploadBtn').classList.add('loaded');
+                    document.getElementById('dropiUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'dropi\')">✓ Cargado';
+                    document.getElementById('dropiStatus').textContent = `${data.length} registros`;
+                    document.getElementById('dropiStatus').classList.add('loaded');
+                    document.getElementById('deleteDataBtn').style.display = 'block';
+                    populateFilters();
+
+                    // Save to LocalStorage
+                    saveToLocalStorage();
 
                     renderContent();
                 } catch (error) {
@@ -895,431 +1195,6 @@
             return { orders, stats };
         }
 
-        // Process Shopify data - Enhanced version with all metrics
-        function processShopifyData(data) {
-            const orders = data.map((row, idx) => {
-                // Parse date
-                let fecha = row['Created at'] || row['Date'] || row['Fecha'] || row['created_at'] || row['FECHA'];
-                if (fecha) {
-                    if (typeof fecha === 'number') {
-                        fecha = new Date((fecha - 25569) * 86400 * 1000);
-                    } else if (typeof fecha === 'string') {
-                        fecha = new Date(fecha);
-                    }
-                }
-
-                // Parse financial values
-                const parseAmount = (val) => {
-                    if (!val) return 0;
-                    if (typeof val === 'number') return val;
-                    return parseFloat(String(val).replace(/[^0-9.-]/g, '')) || 0;
-                };
-
-                // Detect marketing source from various fields
-                const detectSource = (row) => {
-                    const refSource = (row['Referring Site'] || row['Landing Site'] || row['Source'] || row['FUENTE'] || '').toLowerCase();
-                    const tags = (row['Tags'] || row['tags'] || '').toLowerCase();
-                    const utmSource = (row['UTM Source'] || row['utm_source'] || '').toLowerCase();
-                    const notes = (row['Notes'] || row['Note'] || row['OBSERVACIONES'] || '').toLowerCase();
-
-                    if (refSource.includes('facebook') || tags.includes('facebook') || utmSource.includes('facebook') || notes.includes('facebook')) return 'Facebook';
-                    if (refSource.includes('tiktok') || tags.includes('tiktok') || utmSource.includes('tiktok') || notes.includes('tiktok')) return 'TikTok';
-                    if (refSource.includes('instagram') || tags.includes('instagram') || utmSource.includes('instagram') || notes.includes('instagram')) return 'Instagram';
-                    if (refSource.includes('google') || utmSource.includes('google')) return 'Google';
-                    if (refSource.includes('whatsapp') || notes.includes('whatsapp')) return 'WhatsApp';
-                    if (tags.includes('casa') || tags.includes('oficina') || notes.includes('casa') || notes.includes('oficina')) return 'Casa/Oficina';
-                    if (refSource || utmSource) return 'Otro';
-                    return 'Orgánico/Directo';
-                };
-
-                return {
-                    id: idx + 1,
-                    orderId: row['Name'] || row['Order'] || row['#'] || row['id'] || row['ID'] || '',
-                    fecha: fecha,
-                    fechaStr: row['Created at'] || row['Date'] || row['Fecha'] || row['FECHA'] || '',
-                    cliente: row['Billing Name'] || row['Customer'] || row['Cliente'] || row['Shipping Name'] || row['NOMBRE'] || '',
-                    email: row['Email'] || row['email'] || row['EMAIL'] || '',
-                    telefono: row['Billing Phone'] || row['Phone'] || row['Shipping Phone'] || row['TELEFONO'] || row['CELULAR'] || '',
-                    ciudad: row['Billing City'] || row['Shipping City'] || row['Ciudad'] || row['CIUDAD'] || '',
-                    departamento: row['Billing Province'] || row['Shipping Province'] || row['DEPARTAMENTO'] || '',
-                    pais: row['Billing Country'] || row['Shipping Country'] || row['País'] || 'Colombia',
-                    direccion: row['Billing Address1'] || row['Shipping Address1'] || row['Dirección'] || row['DIRECCION'] || '',
-                    codigoPostal: row['Billing Zip'] || row['Shipping Zip'] || '',
-                    estatus: row['Financial Status'] || row['Payment Status'] || row['ESTADO'] || row['Estatus'] || 'pending',
-                    fulfillmentStatus: row['Fulfillment Status'] || row['Estado Envío'] || row['ESTADO ENVIO'] || '',
-                    total: parseAmount(row['Total'] || row['total'] || row['TOTAL'] || 0),
-                    subtotal: parseAmount(row['Subtotal'] || row['subtotal'] || row['SUBTOTAL'] || 0),
-                    descuento: parseAmount(row['Discount Amount'] || row['Discount'] || row['Descuento'] || row['DESCUENTO'] || 0),
-                    codigoDescuento: row['Discount Code'] || row['Código Descuento'] || '',
-                    envio: parseAmount(row['Shipping'] || row['Envío'] || row['ENVIO'] || 0),
-                    impuestos: parseAmount(row['Taxes'] || row['Tax'] || row['Impuestos'] || 0),
-                    producto: row['Lineitem name'] || row['Product'] || row['Producto'] || row['PRODUCTO'] || '',
-                    variante: row['Lineitem variant'] || row['Variant'] || row['VARIANTE'] || '',
-                    sku: row['Lineitem sku'] || row['SKU'] || row['sku'] || '',
-                    cantidad: Number(row['Lineitem quantity'] || row['Quantity'] || row['Cantidad'] || row['CANTIDAD'] || 1),
-                    precioUnitario: parseAmount(row['Lineitem price'] || row['Price'] || row['Precio'] || row['PRECIO'] || 0),
-                    metodoEnvio: row['Shipping Method'] || row['Método Envío'] || '',
-                    metodoPago: row['Payment Method'] || row['Gateway'] || row['Método Pago'] || '',
-                    notas: row['Notes'] || row['Note'] || row['Notas'] || row['OBSERVACIONES'] || '',
-                    tags: row['Tags'] || row['tags'] || '',
-                    moneda: row['Currency'] || row['currency'] || 'COP',
-                    // Marketing fields
-                    source: detectSource(row),
-                    referringSite: row['Referring Site'] || row['Landing Site'] || '',
-                    utmSource: row['UTM Source'] || row['utm_source'] || '',
-                    utmMedium: row['UTM Medium'] || row['utm_medium'] || '',
-                    utmCampaign: row['UTM Campaign'] || row['utm_campaign'] || row['Campaign ID'] || '',
-                    // Additional fields
-                    cancelReason: row['Cancel Reason'] || row['Cancelled at'] || '',
-                    riskLevel: row['Risk Level'] || '',
-                    acceptsMarketing: row['Accepts Marketing'] || ''
-                };
-            });
-
-            const stats = calculateShopifyStats(orders);
-            return { orders, stats };
-        }
-
-        function calculateShopifyStats(orders) {
-            const total = orders.length;
-
-            // ==================== UNIQUE ORDERS ====================
-            const uniqueOrderIds = [...new Set(orders.map(o => o.orderId).filter(id => id))];
-            const totalOrders = uniqueOrderIds.length || total;
-
-            // ==================== FINANCIAL METRICS ====================
-            const totales = orders.map(o => o.total).filter(t => t > 0);
-            const ventasTotales = totales.reduce((sum, t) => sum + t, 0);
-            const subtotalTotal = orders.reduce((sum, o) => sum + o.subtotal, 0);
-            const descuentoTotal = orders.reduce((sum, o) => sum + o.descuento, 0);
-            const envioTotal = orders.reduce((sum, o) => sum + o.envio, 0);
-
-            // Ticket promedio y mediana
-            const ticketPromedio = totalOrders > 0 ? ventasTotales / totalOrders : 0;
-            const sortedTotales = [...totales].sort((a, b) => a - b);
-            const ticketMediana = sortedTotales.length > 0
-                ? sortedTotales[Math.floor(sortedTotales.length / 2)]
-                : 0;
-
-            // Precio min/max
-            const precioMin = sortedTotales.length > 0 ? sortedTotales[0] : 0;
-            const precioMax = sortedTotales.length > 0 ? sortedTotales[sortedTotales.length - 1] : 0;
-
-            // ==================== STATUS BREAKDOWN ====================
-            const porEstatus = {};
-            orders.forEach(o => {
-                const status = (o.estatus || 'unknown').toLowerCase();
-                if (!porEstatus[status]) porEstatus[status] = { count: 0, total: 0, orders: [] };
-                porEstatus[status].count++;
-                porEstatus[status].total += o.total;
-                porEstatus[status].orders.push(o);
-            });
-
-            // Fulfillment status
-            const porFulfillment = {};
-            orders.forEach(o => {
-                const status = (o.fulfillmentStatus || 'sin_asignar').toLowerCase() || 'sin_asignar';
-                if (!porFulfillment[status]) porFulfillment[status] = { count: 0, total: 0 };
-                porFulfillment[status].count++;
-                porFulfillment[status].total += o.total;
-            });
-
-            // ==================== PRODUCT METRICS ====================
-            const porProducto = {};
-            orders.forEach(o => {
-                if (!o.producto) return;
-                if (!porProducto[o.producto]) {
-                    porProducto[o.producto] = { count: 0, ventas: 0, cantidad: 0, orders: [], variantes: {} };
-                }
-                porProducto[o.producto].count++;
-                porProducto[o.producto].ventas += o.total;
-                porProducto[o.producto].cantidad += o.cantidad;
-                porProducto[o.producto].orders.push(o);
-                // Track variants
-                if (o.variante) {
-                    if (!porProducto[o.producto].variantes[o.variante]) {
-                        porProducto[o.producto].variantes[o.variante] = 0;
-                    }
-                    porProducto[o.producto].variantes[o.variante] += o.cantidad;
-                }
-            });
-
-            // Calculate product concentration (80/20 rule)
-            const productosOrdenados = Object.entries(porProducto)
-                .map(([name, data]) => ({ name, ...data }))
-                .sort((a, b) => b.ventas - a.ventas);
-
-            let acumulado = 0;
-            let productos80 = 0;
-            const totalVentasProductos = productosOrdenados.reduce((s, p) => s + p.ventas, 0);
-            for (const p of productosOrdenados) {
-                acumulado += p.ventas;
-                productos80++;
-                if (acumulado >= totalVentasProductos * 0.8) break;
-            }
-            const concentracionProductos = {
-                productos80,
-                totalProductos: productosOrdenados.length,
-                porcentaje: productosOrdenados.length > 0 ? (productos80 / productosOrdenados.length * 100).toFixed(1) : 0
-            };
-
-            // ==================== CITY/GEO METRICS ====================
-            const porCiudad = {};
-            orders.forEach(o => {
-                if (!o.ciudad) return;
-                if (!porCiudad[o.ciudad]) {
-                    porCiudad[o.ciudad] = { count: 0, total: 0, orders: [], ticketPromedio: 0 };
-                }
-                porCiudad[o.ciudad].count++;
-                porCiudad[o.ciudad].total += o.total;
-                porCiudad[o.ciudad].orders.push(o);
-            });
-            // Calculate ticket promedio por ciudad
-            Object.keys(porCiudad).forEach(ciudad => {
-                porCiudad[ciudad].ticketPromedio = porCiudad[ciudad].count > 0
-                    ? porCiudad[ciudad].total / porCiudad[ciudad].count
-                    : 0;
-            });
-
-            // City concentration
-            const ciudadesOrdenadas = Object.entries(porCiudad)
-                .map(([name, data]) => ({ name, ...data }))
-                .sort((a, b) => b.count - a.count);
-            const top10Ciudades = ciudadesOrdenadas.slice(0, 10);
-            const pedidosTop10 = top10Ciudades.reduce((s, c) => s + c.count, 0);
-            const concentracionGeo = totalOrders > 0 ? (pedidosTop10 / totalOrders * 100).toFixed(1) : 0;
-
-            // ==================== CUSTOMER METRICS ====================
-            const porCliente = {};
-            orders.forEach(o => {
-                const cliente = o.email || o.cliente || 'unknown';
-                if (cliente === 'unknown') return;
-                if (!porCliente[cliente]) {
-                    porCliente[cliente] = {
-                        count: 0,
-                        total: 0,
-                        nombre: o.cliente,
-                        email: o.email,
-                        telefono: o.telefono,
-                        ciudad: o.ciudad,
-                        orders: [],
-                        primeraCompra: null,
-                        ultimaCompra: null
-                    };
-                }
-                porCliente[cliente].count++;
-                porCliente[cliente].total += o.total;
-                porCliente[cliente].orders.push(o);
-                // Track first and last purchase
-                if (o.fecha) {
-                    if (!porCliente[cliente].primeraCompra || o.fecha < porCliente[cliente].primeraCompra) {
-                        porCliente[cliente].primeraCompra = o.fecha;
-                    }
-                    if (!porCliente[cliente].ultimaCompra || o.fecha > porCliente[cliente].ultimaCompra) {
-                        porCliente[cliente].ultimaCompra = o.fecha;
-                    }
-                }
-            });
-
-            const totalClientes = Object.keys(porCliente).length;
-            const clientesRecurrentes = Object.values(porCliente).filter(c => c.count > 1).length;
-            const tasaRecompra = totalClientes > 0 ? (clientesRecurrentes / totalClientes * 100).toFixed(1) : 0;
-            const frecuenciaCompra = totalClientes > 0 ? (totalOrders / totalClientes).toFixed(2) : 0;
-            const ltv = totalClientes > 0 ? ventasTotales / totalClientes : 0;
-
-            // RFM Analysis
-            const ahora = new Date();
-            const clientesRFM = Object.entries(porCliente).map(([id, data]) => {
-                const diasDesdeUltimaCompra = data.ultimaCompra
-                    ? Math.floor((ahora - new Date(data.ultimaCompra)) / (1000 * 60 * 60 * 24))
-                    : 999;
-                return {
-                    id,
-                    ...data,
-                    recencia: diasDesdeUltimaCompra,
-                    frecuencia: data.count,
-                    monetario: data.total
-                };
-            });
-
-            // Segment customers by RFM
-            const rfmSegments = {
-                champions: clientesRFM.filter(c => c.recencia < 30 && c.frecuencia > 2 && c.monetario > ticketPromedio * 2).length,
-                loyalCustomers: clientesRFM.filter(c => c.frecuencia > 2).length,
-                potentialLoyalist: clientesRFM.filter(c => c.recencia < 60 && c.frecuencia <= 2 && c.monetario > ticketPromedio).length,
-                atRisk: clientesRFM.filter(c => c.recencia > 90 && c.frecuencia > 1).length,
-                cantLose: clientesRFM.filter(c => c.recencia > 60 && c.monetario > ticketPromedio * 3).length,
-                hibernating: clientesRFM.filter(c => c.recencia > 120).length
-            };
-
-            // ==================== MARKETING METRICS ====================
-            const porCanal = {};
-            orders.forEach(o => {
-                const canal = o.source || 'Desconocido';
-                if (!porCanal[canal]) {
-                    porCanal[canal] = { count: 0, total: 0, orders: [] };
-                }
-                porCanal[canal].count++;
-                porCanal[canal].total += o.total;
-                porCanal[canal].orders.push(o);
-            });
-
-            // UTM Campaigns
-            const porCampaign = {};
-            orders.forEach(o => {
-                if (!o.utmCampaign) return;
-                if (!porCampaign[o.utmCampaign]) {
-                    porCampaign[o.utmCampaign] = { count: 0, total: 0 };
-                }
-                porCampaign[o.utmCampaign].count++;
-                porCampaign[o.utmCampaign].total += o.total;
-            });
-
-            // ==================== TIME-BASED METRICS ====================
-            const porMes = {};
-            const porDiaSemana = {};
-            const porHora = {};
-            orders.forEach(o => {
-                if (!o.fecha || isNaN(o.fecha)) return;
-                const fecha = new Date(o.fecha);
-                const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-                const diaSemana = fecha.getDay();
-                const hora = fecha.getHours();
-
-                if (!porMes[mes]) porMes[mes] = { count: 0, total: 0 };
-                porMes[mes].count++;
-                porMes[mes].total += o.total;
-
-                if (!porDiaSemana[diaSemana]) porDiaSemana[diaSemana] = { count: 0, total: 0 };
-                porDiaSemana[diaSemana].count++;
-                porDiaSemana[diaSemana].total += o.total;
-
-                if (!porHora[hora]) porHora[hora] = { count: 0, total: 0 };
-                porHora[hora].count++;
-                porHora[hora].total += o.total;
-            });
-
-            // Calculate MoM growth
-            const mesesOrdenados = Object.keys(porMes).sort();
-            const crecimientoMoM = [];
-            for (let i = 1; i < mesesOrdenados.length; i++) {
-                const mesActual = porMes[mesesOrdenados[i]];
-                const mesAnterior = porMes[mesesOrdenados[i - 1]];
-                const crecimiento = mesAnterior.total > 0
-                    ? ((mesActual.total - mesAnterior.total) / mesAnterior.total * 100).toFixed(1)
-                    : 0;
-                crecimientoMoM.push({
-                    mes: mesesOrdenados[i],
-                    crecimiento: parseFloat(crecimiento),
-                    pedidos: mesActual.count,
-                    ventas: mesActual.total
-                });
-            }
-
-            // Cohort analysis (by first purchase month)
-            const cohortes = {};
-            Object.values(porCliente).forEach(cliente => {
-                if (!cliente.primeraCompra) return;
-                const cohorte = `${new Date(cliente.primeraCompra).getFullYear()}-${String(new Date(cliente.primeraCompra).getMonth() + 1).padStart(2, '0')}`;
-                if (!cohortes[cohorte]) {
-                    cohortes[cohorte] = { clientes: 0, totalGastado: 0, pedidos: 0 };
-                }
-                cohortes[cohorte].clientes++;
-                cohortes[cohorte].totalGastado += cliente.total;
-                cohortes[cohorte].pedidos += cliente.count;
-            });
-
-            // ==================== QUALITY METRICS ====================
-            const cancelados = orders.filter(o =>
-                o.estatus.toLowerCase().includes('cancel') ||
-                o.estatus.toLowerCase().includes('refund')
-            ).length;
-            const tasaCancelacion = totalOrders > 0 ? (cancelados / totalOrders * 100).toFixed(1) : 0;
-
-            // Check for duplicates (same customer, same day, similar total)
-            const posiblesDuplicados = [];
-            const ordenesAgrupadas = {};
-            orders.forEach(o => {
-                const key = `${o.cliente}_${o.fechaStr}_${Math.round(o.total / 1000)}`;
-                if (!ordenesAgrupadas[key]) ordenesAgrupadas[key] = [];
-                ordenesAgrupadas[key].push(o);
-            });
-            Object.values(ordenesAgrupadas).forEach(grupo => {
-                if (grupo.length > 1) posiblesDuplicados.push(...grupo.slice(1));
-            });
-            const tasaDuplicados = totalOrders > 0 ? (posiblesDuplicados.length / totalOrders * 100).toFixed(1) : 0;
-
-            // Phone validation
-            const sinTelefono = orders.filter(o => !o.telefono || o.telefono.length < 7).length;
-            const tasaContactabilidad = totalOrders > 0 ? ((totalOrders - sinTelefono) / totalOrders * 100).toFixed(1) : 0;
-
-            // ==================== PRICE SEGMENTATION ====================
-            const segmentosTicket = {
-                bajo: orders.filter(o => o.total > 0 && o.total < 100000).length,
-                medio: orders.filter(o => o.total >= 100000 && o.total < 200000).length,
-                alto: orders.filter(o => o.total >= 200000).length
-            };
-
-            // ==================== PAID ORDERS ====================
-            const paidOrders = orders.filter(o =>
-                o.estatus.toLowerCase() === 'paid' ||
-                o.estatus.toLowerCase() === 'pagado' ||
-                o.estatus.toLowerCase() === 'completed'
-            );
-            const ventasPagadas = paidOrders.reduce((sum, o) => sum + o.total, 0);
-            const tasaConversion = totalOrders > 0 ? (paidOrders.length / totalOrders * 100).toFixed(1) : 0;
-
-            return {
-                // Basic metrics
-                total,
-                totalOrders,
-                ventasTotales,
-                ventasPagadas,
-                subtotalTotal,
-                descuentoTotal,
-                envioTotal,
-                ticketPromedio,
-                ticketMediana,
-                precioMin,
-                precioMax,
-                tasaConversion,
-                // Status
-                porEstatus,
-                porFulfillment,
-                tasaCancelacion,
-                tasaDuplicados,
-                posiblesDuplicados: posiblesDuplicados.length,
-                // Products
-                porProducto,
-                concentracionProductos,
-                totalProductosUnicos: Object.keys(porProducto).length,
-                // Geography
-                porCiudad,
-                concentracionGeo,
-                totalCiudades: Object.keys(porCiudad).length,
-                // Customers
-                porCliente,
-                totalClientes,
-                clientesRecurrentes,
-                tasaRecompra,
-                frecuenciaCompra,
-                ltv,
-                rfmSegments,
-                clientesRFM,
-                tasaContactabilidad,
-                // Marketing
-                porCanal,
-                porCampaign,
-                // Time-based
-                porMes,
-                porDiaSemana,
-                porHora,
-                crecimientoMoM,
-                cohortes,
-                // Segmentation
-                segmentosTicket
-            };
-        }
 
         function calculateStats(orders) {
             const total = orders.length;
@@ -1529,34 +1404,18 @@
             event.target.closest('.nav-item').classList.add('active');
 
             const titles = {
-                resumen: ['Resumen General', 'Vista general de tu negocio - Dropi'],
-                pedidos: ['Detalle de Pedidos', 'Lista completa de todos los pedidos - Dropi'],
-                estatus: ['Análisis por Estatus', 'Desglose por estado de los pedidos - Dropi'],
-                productos: ['Análisis de Productos', 'Rendimiento por producto - Dropi'],
-                ciudades: ['Análisis por Ciudad', 'Rendimiento por ubicación - Dropi'],
-                transportadoras: ['Transportadoras', 'Efectividad por transportadora - Dropi'],
-                rentabilidad: ['Rentabilidad', 'Análisis financiero detallado - Dropi'],
-                'shopify-resumen': ['Resumen Ejecutivo', 'KPIs financieros, operativos y de crecimiento'],
-                'shopify-pedidos': ['Pedidos Shopify', 'Lista completa con filtros y detalles'],
-                'shopify-embudo': ['Embudo de Conversión', 'Estados de pedidos y tasas de conversión'],
-                'shopify-productos': ['Performance de Productos', 'Ventas, rotación y análisis ABC'],
-                'shopify-clientes': ['Análisis de Clientes', 'Segmentación RFM y valor de vida'],
-                'shopify-marketing': ['Marketing y Canales', 'Performance por fuente y UTMs'],
-                'shopify-geo': ['Análisis Geográfico', 'Ventas por ciudad y penetración de mercado'],
-                'shopify-tendencias': ['Tendencias y Cohortes', 'Evolución temporal y estacionalidad']
+                resumen: ['Resumen General', 'Vista general de tu negocio'],
+                pedidos: ['Detalle de Pedidos', 'Lista completa de todos los pedidos'],
+                estatus: ['Análisis por Estatus', 'Desglose por estado de los pedidos'],
+                productos: ['Análisis de Productos', 'Rendimiento por producto'],
+                ciudades: ['Análisis por Ciudad', 'Rendimiento por ubicación'],
+                transportadoras: ['Transportadoras', 'Efectividad por transportadora'],
+                rentabilidad: ['Rentabilidad', 'Análisis financiero detallado']
             };
 
             const titleData = titles[tab] || ['Dashboard', 'Vista general'];
             document.getElementById('pageTitle').textContent = titleData[0];
             document.getElementById('pageSubtitle').textContent = titleData[1];
-
-            // Show/hide filters based on tab type
-            const filtersBar = document.getElementById('filtersBar');
-            if (tab.startsWith('shopify-')) {
-                filtersBar.style.display = 'none';
-            } else {
-                filtersBar.style.display = 'flex';
-            }
 
             renderContent();
         }
@@ -1565,55 +1424,6 @@
         function renderContent() {
             let html = '';
 
-            // Handle Shopify tabs
-            if (currentTab.startsWith('shopify-')) {
-                if (!shopifyProcessed) {
-                    html = `
-                        <div class="empty-state">
-                            <div class="icon">🛒</div>
-                            <h3>Carga tus datos de Shopify</h3>
-                            <p>Sube tu archivo de exportación de Shopify para ver los KPIs</p>
-                        </div>
-                    `;
-                    document.getElementById('content').innerHTML = html;
-                    return;
-                }
-
-                const shopifyStats = calculateShopifyStats(filteredShopifyData || shopifyProcessed.orders);
-
-                switch(currentTab) {
-                    case 'shopify-resumen':
-                        html = renderShopifyResumen(shopifyStats);
-                        break;
-                    case 'shopify-pedidos':
-                        html = renderShopifyPedidos(shopifyStats);
-                        break;
-                    case 'shopify-embudo':
-                        html = renderShopifyEmbudo(shopifyStats);
-                        break;
-                    case 'shopify-productos':
-                        html = renderShopifyProductos(shopifyStats);
-                        break;
-                    case 'shopify-clientes':
-                        html = renderShopifyClientes(shopifyStats);
-                        break;
-                    case 'shopify-marketing':
-                        html = renderShopifyMarketing(shopifyStats);
-                        break;
-                    case 'shopify-geo':
-                        html = renderShopifyGeo(shopifyStats);
-                        break;
-                    case 'shopify-tendencias':
-                        html = renderShopifyTendencias(shopifyStats);
-                        break;
-                }
-
-                document.getElementById('content').innerHTML = html;
-                setTimeout(() => initShopifyCharts(shopifyStats), 100);
-                return;
-            }
-
-            // Handle Dropi tabs
             if (!dropiData) {
                 html = `
                     <div class="empty-state">
@@ -2182,1306 +1992,6 @@
                     </table>
                 </div>
             `;
-        }
-
-        // ========== SHOPIFY RENDER FUNCTIONS ==========
-
-        function renderShopifyResumen(stats) {
-            const paidCount = stats.porEstatus['paid']?.count || 0;
-            const pendingCount = stats.porEstatus['pending']?.count || 0;
-            const lastMoM = stats.crecimientoMoM.length > 0 ? stats.crecimientoMoM[stats.crecimientoMoM.length - 1] : null;
-
-            return `
-                <!-- SECCIÓN: MÉTRICAS FINANCIERAS -->
-                <h3 style="color:var(--text-muted);font-size:12px;margin-bottom:15px;text-transform:uppercase;letter-spacing:1px">💰 Métricas Financieras</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header">
-                            <div class="kpi-icon">💵</div>
-                            ${lastMoM ? `<span class="kpi-trend ${lastMoM.crecimiento >= 0 ? 'up' : 'down'}">${lastMoM.crecimiento >= 0 ? '↑' : '↓'} ${Math.abs(lastMoM.crecimiento)}%</span>` : ''}
-                        </div>
-                        <div class="kpi-label">Revenue Total</div>
-                        <div class="kpi-value">${formatCOP(stats.ventasTotales)}</div>
-                        <div class="kpi-subtitle">${formatNumber(stats.totalOrders)} pedidos</div>
-                    </div>
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">🎫</div></div>
-                        <div class="kpi-label">Ticket Promedio (AOV)</div>
-                        <div class="kpi-value">${formatCOP(stats.ticketPromedio)}</div>
-                        <div class="kpi-subtitle">Mediana: ${formatCOP(stats.ticketMediana)}</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">📊</div></div>
-                        <div class="kpi-label">Rango de Precios</div>
-                        <div class="kpi-value" style="font-size:18px">${formatCOP(stats.precioMin)} - ${formatCOP(stats.precioMax)}</div>
-                        <div class="kpi-subtitle">Min - Max</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">🏷️</div></div>
-                        <div class="kpi-label">Descuentos Otorgados</div>
-                        <div class="kpi-value">${formatCOP(stats.descuentoTotal)}</div>
-                        <div class="kpi-subtitle">${stats.ventasTotales > 0 ? (stats.descuentoTotal / stats.ventasTotales * 100).toFixed(1) : 0}% del revenue</div>
-                    </div>
-                </div>
-
-                <!-- SECCIÓN: MÉTRICAS DE CLIENTES -->
-                <h3 style="color:var(--text-muted);font-size:12px;margin:25px 0 15px;text-transform:uppercase;letter-spacing:1px">👥 Métricas de Clientes</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">👤</div></div>
-                        <div class="kpi-label">Clientes Únicos</div>
-                        <div class="kpi-value">${formatNumber(stats.totalClientes)}</div>
-                        <div class="kpi-subtitle">${stats.clientesRecurrentes} recurrentes</div>
-                    </div>
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header"><div class="kpi-icon">🔄</div></div>
-                        <div class="kpi-label">Tasa de Recompra</div>
-                        <div class="kpi-value">${stats.tasaRecompra}%</div>
-                        <div class="kpi-subtitle">Frecuencia: ${stats.frecuenciaCompra}x</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">💎</div></div>
-                        <div class="kpi-label">LTV (Valor de Vida)</div>
-                        <div class="kpi-value">${formatCOP(stats.ltv)}</div>
-                        <div class="kpi-subtitle">Revenue / Cliente</div>
-                    </div>
-                    <div class="kpi-card ${parseFloat(stats.tasaContactabilidad) >= 90 ? 'emerald' : 'amber'}">
-                        <div class="kpi-header"><div class="kpi-icon">📞</div></div>
-                        <div class="kpi-label">Contactabilidad</div>
-                        <div class="kpi-value">${stats.tasaContactabilidad}%</div>
-                        <div class="kpi-subtitle">Con teléfono válido</div>
-                    </div>
-                </div>
-
-                <!-- SECCIÓN: MÉTRICAS OPERATIVAS -->
-                <h3 style="color:var(--text-muted);font-size:12px;margin:25px 0 15px;text-transform:uppercase;letter-spacing:1px">📦 Métricas Operativas</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card ${parseFloat(stats.tasaConversion) >= 80 ? 'emerald' : 'amber'}">
-                        <div class="kpi-header"><div class="kpi-icon">🎯</div></div>
-                        <div class="kpi-label">Tasa de Conversión</div>
-                        <div class="kpi-value">${stats.tasaConversion}%</div>
-                        <div class="kpi-subtitle">${paidCount} pagados de ${stats.totalOrders}</div>
-                    </div>
-                    <div class="kpi-card ${parseFloat(stats.tasaCancelacion) <= 10 ? 'emerald' : 'red'}">
-                        <div class="kpi-header"><div class="kpi-icon">❌</div></div>
-                        <div class="kpi-label">Tasa Cancelación</div>
-                        <div class="kpi-value">${stats.tasaCancelacion}%</div>
-                        <div class="kpi-subtitle">${parseFloat(stats.tasaCancelacion) > 10 ? '⚠️ Alto' : 'Normal'}</div>
-                    </div>
-                    <div class="kpi-card ${parseFloat(stats.tasaDuplicados) <= 2 ? 'emerald' : 'amber'}">
-                        <div class="kpi-header"><div class="kpi-icon">📋</div></div>
-                        <div class="kpi-label">Posibles Duplicados</div>
-                        <div class="kpi-value">${stats.posiblesDuplicados}</div>
-                        <div class="kpi-subtitle">${stats.tasaDuplicados}% del total</div>
-                    </div>
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">🚚</div></div>
-                        <div class="kpi-label">Costo Envío Total</div>
-                        <div class="kpi-value">${formatCOP(stats.envioTotal)}</div>
-                        <div class="kpi-subtitle">Promedio: ${formatCOP(stats.envioTotal / stats.totalOrders)}</div>
-                    </div>
-                </div>
-
-                <!-- SECCIÓN: SEGMENTACIÓN POR TICKET -->
-                <h3 style="color:var(--text-muted);font-size:12px;margin:25px 0 15px;text-transform:uppercase;letter-spacing:1px">📈 Segmentación por Ticket</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">🔻</div></div>
-                        <div class="kpi-label">Tickets Bajos (&lt;$100K)</div>
-                        <div class="kpi-value">${formatNumber(stats.segmentosTicket.bajo)}</div>
-                        <div class="kpi-subtitle">${(stats.segmentosTicket.bajo / stats.totalOrders * 100).toFixed(1)}%</div>
-                    </div>
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">➖</div></div>
-                        <div class="kpi-label">Tickets Medios ($100K-$200K)</div>
-                        <div class="kpi-value">${formatNumber(stats.segmentosTicket.medio)}</div>
-                        <div class="kpi-subtitle">${(stats.segmentosTicket.medio / stats.totalOrders * 100).toFixed(1)}%</div>
-                    </div>
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header"><div class="kpi-icon">🔺</div></div>
-                        <div class="kpi-label">Tickets Altos (&gt;$200K)</div>
-                        <div class="kpi-value">${formatNumber(stats.segmentosTicket.alto)}</div>
-                        <div class="kpi-subtitle">${(stats.segmentosTicket.alto / stats.totalOrders * 100).toFixed(1)}%</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">📦</div></div>
-                        <div class="kpi-label">Productos Únicos</div>
-                        <div class="kpi-value">${stats.totalProductosUnicos}</div>
-                        <div class="kpi-subtitle">${stats.concentracionProductos.productos80} generan 80%</div>
-                    </div>
-                </div>
-
-                <!-- GRÁFICOS -->
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">📊 Estado de Pagos</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyStatusChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">📢 Pedidos por Canal</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyChannelChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card full-width">
-                        <div class="chart-header">
-                            <span class="chart-title">📈 Tendencia Mensual de Ventas</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyTrendChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderShopifyPedidos(stats) {
-            const orders = filteredShopifyData || shopifyProcessed.orders;
-            const startIdx = (currentPage - 1) * itemsPerPage;
-            const endIdx = startIdx + itemsPerPage;
-            const pageData = orders.slice(startIdx, endIdx);
-            const totalPages = Math.ceil(orders.length / itemsPerPage);
-
-            return `
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Pedidos de Shopify
-                            <span class="table-badge">${formatNumber(orders.length)} registros</span>
-                        </div>
-                        <input type="text" class="table-search" placeholder="🔍 Buscar por cliente, pedido..." oninput="searchShopifyTable(this.value)">
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table" id="shopifyOrdersTable">
-                            <thead>
-                                <tr>
-                                    <th>Pedido</th>
-                                    <th>Fecha</th>
-                                    <th>Cliente</th>
-                                    <th>Ciudad</th>
-                                    <th>Producto</th>
-                                    <th>Total</th>
-                                    <th>Estatus</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${pageData.map(o => `
-                                    <tr class="clickable" ondblclick="showShopifyOrderDetail(${o.id})">
-                                        <td><strong>${o.orderId}</strong></td>
-                                        <td>${o.fechaStr || '-'}</td>
-                                        <td>${o.cliente || '-'}</td>
-                                        <td>${o.ciudad || '-'}</td>
-                                        <td>${(o.producto || '').substring(0, 25)}${(o.producto || '').length > 25 ? '...' : ''}</td>
-                                        <td><strong>${formatCOP(o.total)}</strong></td>
-                                        <td><span class="status-badge ${getShopifyStatusClass(o.estatus)}">${o.estatus}</span></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="pagination">
-                        <span class="pagination-info">Mostrando ${startIdx + 1}-${Math.min(endIdx, orders.length)} de ${formatNumber(orders.length)}</span>
-                        <div class="pagination-btns">
-                            <button class="page-btn" onclick="goToShopifyPage(1)" ${currentPage === 1 ? 'disabled' : ''}>««</button>
-                            <button class="page-btn" onclick="goToShopifyPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>«</button>
-                            ${generatePaginationButtons(currentPage, totalPages)}
-                            <button class="page-btn" onclick="goToShopifyPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>»</button>
-                            <button class="page-btn" onclick="goToShopifyPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>»»</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderShopifyProductos(stats) {
-            const productosArray = Object.entries(stats.porProducto)
-                .map(([name, data]) => ({
-                    name,
-                    ...data,
-                    precioPromedio: data.count > 0 ? data.ventas / data.count : 0,
-                    participacion: stats.ventasTotales > 0 ? (data.ventas / stats.ventasTotales * 100).toFixed(1) : 0
-                }))
-                .sort((a, b) => b.ventas - a.ventas);
-
-            const totalUnidades = productosArray.reduce((s, p) => s + p.cantidad, 0);
-
-            // Clasificación ABC
-            let acumulado = 0;
-            const totalVentas = productosArray.reduce((s, p) => s + p.ventas, 0);
-            const productosABC = productosArray.map(p => {
-                acumulado += p.ventas;
-                const porcentajeAcum = (acumulado / totalVentas * 100);
-                let clasificacion = 'C';
-                if (porcentajeAcum <= 80) clasificacion = 'A';
-                else if (porcentajeAcum <= 95) clasificacion = 'B';
-                return { ...p, clasificacion, porcentajeAcum };
-            });
-
-            const productosA = productosABC.filter(p => p.clasificacion === 'A').length;
-            const productosB = productosABC.filter(p => p.clasificacion === 'B').length;
-            const productosC = productosABC.filter(p => p.clasificacion === 'C').length;
-
-            return `
-                <h3 style="color:var(--text-muted);font-size:12px;margin-bottom:15px;text-transform:uppercase;letter-spacing:1px">📊 Métricas de Productos</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">📦</div></div>
-                        <div class="kpi-label">Total Productos</div>
-                        <div class="kpi-value">${stats.totalProductosUnicos}</div>
-                        <div class="kpi-subtitle">SKUs diferentes</div>
-                    </div>
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header"><div class="kpi-icon">🏆</div></div>
-                        <div class="kpi-label">Producto #1</div>
-                        <div class="kpi-value" style="font-size:14px">${productosArray[0]?.name.substring(0, 18) || '-'}...</div>
-                        <div class="kpi-subtitle">${formatCOP(productosArray[0]?.ventas || 0)} (${productosArray[0]?.participacion}%)</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">📈</div></div>
-                        <div class="kpi-label">Unidades Vendidas</div>
-                        <div class="kpi-value">${formatNumber(totalUnidades)}</div>
-                        <div class="kpi-subtitle">Promedio: ${(totalUnidades / stats.totalOrders).toFixed(1)} por pedido</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">🎯</div></div>
-                        <div class="kpi-label">Concentración 80/20</div>
-                        <div class="kpi-value">${stats.concentracionProductos.productos80}</div>
-                        <div class="kpi-subtitle">${stats.concentracionProductos.porcentaje}% de productos = 80% ventas</div>
-                    </div>
-                </div>
-
-                <h3 style="color:var(--text-muted);font-size:12px;margin:25px 0 15px;text-transform:uppercase;letter-spacing:1px">🏷️ Clasificación ABC</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header"><div class="kpi-icon">🅰️</div></div>
-                        <div class="kpi-label">Productos A (80% ventas)</div>
-                        <div class="kpi-value">${productosA}</div>
-                        <div class="kpi-subtitle">Alta rotación - Priorizar</div>
-                    </div>
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">🅱️</div></div>
-                        <div class="kpi-label">Productos B (15% ventas)</div>
-                        <div class="kpi-value">${productosB}</div>
-                        <div class="kpi-subtitle">Rotación media</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">🅲</div></div>
-                        <div class="kpi-label">Productos C (5% ventas)</div>
-                        <div class="kpi-value">${productosC}</div>
-                        <div class="kpi-subtitle">Baja rotación - Evaluar</div>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card full-width">
-                        <div class="chart-header">
-                            <span class="chart-title">🛍️ Top 10 Productos por Ventas</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyProductsChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Ranking de Productos
-                            <span class="table-badge">${productosABC.length} productos</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>ABC</th>
-                                <th>Producto</th>
-                                <th>Pedidos</th>
-                                <th>Unidades</th>
-                                <th>Ventas</th>
-                                <th>% Participación</th>
-                                <th>Precio Prom.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${productosABC.slice(0, 30).map((p, idx) => `
-                                <tr>
-                                    <td>${idx + 1}</td>
-                                    <td><span class="status-badge ${p.clasificacion === 'A' ? 'entregado' : p.clasificacion === 'B' ? 'transporte' : 'novedad'}">${p.clasificacion}</span></td>
-                                    <td><strong>${p.name.substring(0, 35)}${p.name.length > 35 ? '...' : ''}</strong></td>
-                                    <td>${formatNumber(p.count)}</td>
-                                    <td>${formatNumber(p.cantidad)}</td>
-                                    <td style="color:var(--emerald)"><strong>${formatCOP(p.ventas)}</strong></td>
-                                    <td>${p.participacion}%</td>
-                                    <td>${formatCOP(p.precioPromedio)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        function renderShopifyClientes(stats) {
-            const clientesArray = stats.clientesRFM
-                .sort((a, b) => b.monetario - a.monetario)
-                .slice(0, 50);
-
-            const topCliente = clientesArray[0];
-
-            return `
-                <h3 style="color:var(--text-muted);font-size:12px;margin-bottom:15px;text-transform:uppercase;letter-spacing:1px">👥 Métricas de Clientes</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">👤</div></div>
-                        <div class="kpi-label">Clientes Únicos</div>
-                        <div class="kpi-value">${formatNumber(stats.totalClientes)}</div>
-                        <div class="kpi-subtitle">Base de datos activa</div>
-                    </div>
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header"><div class="kpi-icon">🔄</div></div>
-                        <div class="kpi-label">Tasa de Recompra</div>
-                        <div class="kpi-value">${stats.tasaRecompra}%</div>
-                        <div class="kpi-subtitle">${stats.clientesRecurrentes} clientes recurrentes</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">📊</div></div>
-                        <div class="kpi-label">Frecuencia de Compra</div>
-                        <div class="kpi-value">${stats.frecuenciaCompra}x</div>
-                        <div class="kpi-subtitle">Compras promedio por cliente</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">💎</div></div>
-                        <div class="kpi-label">LTV Promedio</div>
-                        <div class="kpi-value">${formatCOP(stats.ltv)}</div>
-                        <div class="kpi-subtitle">Valor de vida del cliente</div>
-                    </div>
-                </div>
-
-                <h3 style="color:var(--text-muted);font-size:12px;margin:25px 0 15px;text-transform:uppercase;letter-spacing:1px">🎯 Segmentación RFM (Recencia, Frecuencia, Monetario)</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header"><div class="kpi-icon">🏆</div></div>
-                        <div class="kpi-label">Champions</div>
-                        <div class="kpi-value">${stats.rfmSegments.champions}</div>
-                        <div class="kpi-subtitle">Compraron recientemente, frecuente y alto valor</div>
-                    </div>
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">💙</div></div>
-                        <div class="kpi-label">Clientes Leales</div>
-                        <div class="kpi-value">${stats.rfmSegments.loyalCustomers}</div>
-                        <div class="kpi-subtitle">Compran frecuentemente (3+ veces)</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">⭐</div></div>
-                        <div class="kpi-label">Potenciales Leales</div>
-                        <div class="kpi-value">${stats.rfmSegments.potentialLoyalist}</div>
-                        <div class="kpi-subtitle">Compra reciente, buen valor</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">⚠️</div></div>
-                        <div class="kpi-label">En Riesgo</div>
-                        <div class="kpi-value">${stats.rfmSegments.atRisk}</div>
-                        <div class="kpi-subtitle">No compran hace 90+ días</div>
-                    </div>
-                </div>
-
-                <div class="kpi-grid">
-                    <div class="kpi-card red">
-                        <div class="kpi-header"><div class="kpi-icon">💔</div></div>
-                        <div class="kpi-label">No Perder</div>
-                        <div class="kpi-value">${stats.rfmSegments.cantLose}</div>
-                        <div class="kpi-subtitle">Alto valor pero inactivos</div>
-                    </div>
-                    <div class="kpi-card" style="background:var(--bg-secondary)">
-                        <div class="kpi-header"><div class="kpi-icon">😴</div></div>
-                        <div class="kpi-label">Hibernando</div>
-                        <div class="kpi-value">${stats.rfmSegments.hibernating}</div>
-                        <div class="kpi-subtitle">Sin actividad 120+ días</div>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">🎯 Distribución RFM</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyRFMChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">📊 Top Clientes por Valor</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyTopClientesChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Top 20 Clientes por Valor de Vida
-                            <span class="table-badge">${clientesArray.length} clientes</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Cliente</th>
-                                <th>Ciudad</th>
-                                <th>Pedidos</th>
-                                <th>Última Compra</th>
-                                <th>Total Gastado</th>
-                                <th>Recencia</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${clientesArray.slice(0, 20).map((c, idx) => `
-                                <tr>
-                                    <td>${idx + 1}</td>
-                                    <td>
-                                        <strong>${c.nombre || '-'}</strong>
-                                        <div style="font-size:11px;color:var(--text-muted)">${c.email || ''}</div>
-                                    </td>
-                                    <td>${c.ciudad || '-'}</td>
-                                    <td>${c.frecuencia > 1 ? `<span class="status-badge entregado">${c.frecuencia}x</span>` : '1x'}</td>
-                                    <td>${c.ultimaCompra ? new Date(c.ultimaCompra).toLocaleDateString() : '-'}</td>
-                                    <td style="color:var(--emerald)"><strong>${formatCOP(c.monetario)}</strong></td>
-                                    <td><span class="status-badge ${c.recencia < 30 ? 'entregado' : c.recencia < 90 ? 'transporte' : 'devolucion'}">${c.recencia}d</span></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        // ========== EMBUDO DE CONVERSIÓN ==========
-        function renderShopifyEmbudo(stats) {
-            const estatusArray = Object.entries(stats.porEstatus)
-                .map(([name, data]) => ({ name, ...data }))
-                .sort((a, b) => b.count - a.count);
-
-            const fulfillmentArray = Object.entries(stats.porFulfillment)
-                .map(([name, data]) => ({ name, ...data }))
-                .sort((a, b) => b.count - a.count);
-
-            const tasaProblemas = (parseFloat(stats.tasaCancelacion) + parseFloat(stats.tasaDuplicados)).toFixed(1);
-
-            return `
-                <h3 style="color:var(--text-muted);font-size:12px;margin-bottom:15px;text-transform:uppercase;letter-spacing:1px">🎯 Embudo de Conversión</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">📥</div></div>
-                        <div class="kpi-label">Total Pedidos</div>
-                        <div class="kpi-value">${formatNumber(stats.totalOrders)}</div>
-                        <div class="kpi-subtitle">Entradas al embudo</div>
-                    </div>
-                    <div class="kpi-card ${parseFloat(stats.tasaConversion) >= 80 ? 'emerald' : 'amber'}">
-                        <div class="kpi-header"><div class="kpi-icon">✅</div></div>
-                        <div class="kpi-label">Tasa Conversión</div>
-                        <div class="kpi-value">${stats.tasaConversion}%</div>
-                        <div class="kpi-subtitle">Pedidos pagados</div>
-                    </div>
-                    <div class="kpi-card ${parseFloat(stats.tasaCancelacion) <= 10 ? 'emerald' : 'red'}">
-                        <div class="kpi-header"><div class="kpi-icon">❌</div></div>
-                        <div class="kpi-label">Tasa Cancelación</div>
-                        <div class="kpi-value">${stats.tasaCancelacion}%</div>
-                        <div class="kpi-subtitle">${parseFloat(stats.tasaCancelacion) > 10 ? '⚠️ Revisar causas' : 'Normal'}</div>
-                    </div>
-                    <div class="kpi-card ${parseFloat(tasaProblemas) <= 15 ? 'emerald' : 'red'}">
-                        <div class="kpi-header"><div class="kpi-icon">⚠️</div></div>
-                        <div class="kpi-label">Tasa de Problemas</div>
-                        <div class="kpi-value">${tasaProblemas}%</div>
-                        <div class="kpi-subtitle">Cancelaciones + Duplicados</div>
-                    </div>
-                </div>
-
-                <h3 style="color:var(--text-muted);font-size:12px;margin:25px 0 15px;text-transform:uppercase;letter-spacing:1px">💳 Estado de Pago (Financial Status)</h3>
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">📊 Distribución por Estado de Pago</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyStatusChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">🚚 Estado de Envío (Fulfillment)</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyFulfillmentChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Desglose por Estado de Pago
-                            <span class="table-badge">${estatusArray.length} estados</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Estado</th>
-                                <th>Pedidos</th>
-                                <th>% del Total</th>
-                                <th>Valor Total</th>
-                                <th>Ticket Promedio</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${estatusArray.map(e => `
-                                <tr>
-                                    <td><span class="status-badge ${getShopifyStatusClass(e.name)}">${e.name}</span></td>
-                                    <td><strong>${formatNumber(e.count)}</strong></td>
-                                    <td>${(e.count / stats.totalOrders * 100).toFixed(1)}%</td>
-                                    <td style="color:var(--emerald)">${formatCOP(e.total)}</td>
-                                    <td>${formatCOP(e.count > 0 ? e.total / e.count : 0)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="table-container" style="margin-top:20px">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Estado de Envío (Fulfillment)
-                            <span class="table-badge">${fulfillmentArray.length} estados</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Estado Envío</th>
-                                <th>Pedidos</th>
-                                <th>% del Total</th>
-                                <th>Valor Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${fulfillmentArray.map(e => `
-                                <tr>
-                                    <td><span class="status-badge ${e.name.includes('fulfilled') ? 'entregado' : e.name.includes('shipped') ? 'transporte' : 'novedad'}">${e.name || 'Sin asignar'}</span></td>
-                                    <td><strong>${formatNumber(e.count)}</strong></td>
-                                    <td>${(e.count / stats.totalOrders * 100).toFixed(1)}%</td>
-                                    <td style="color:var(--emerald)">${formatCOP(e.total)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        // ========== MARKETING Y CANALES ==========
-        function renderShopifyMarketing(stats) {
-            const canalesArray = Object.entries(stats.porCanal)
-                .map(([name, data]) => ({
-                    name,
-                    ...data,
-                    ticketPromedio: data.count > 0 ? data.total / data.count : 0,
-                    participacion: (data.count / stats.totalOrders * 100).toFixed(1)
-                }))
-                .sort((a, b) => b.count - a.count);
-
-            const campaignsArray = Object.entries(stats.porCampaign)
-                .map(([name, data]) => ({ name, ...data }))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 15);
-
-            const canalTop = canalesArray[0];
-
-            return `
-                <h3 style="color:var(--text-muted);font-size:12px;margin-bottom:15px;text-transform:uppercase;letter-spacing:1px">📢 Performance de Canales</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header"><div class="kpi-icon">🏆</div></div>
-                        <div class="kpi-label">Canal #1</div>
-                        <div class="kpi-value" style="font-size:18px">${canalTop?.name || '-'}</div>
-                        <div class="kpi-subtitle">${formatNumber(canalTop?.count || 0)} pedidos (${canalTop?.participacion}%)</div>
-                    </div>
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">📊</div></div>
-                        <div class="kpi-label">Canales Activos</div>
-                        <div class="kpi-value">${canalesArray.length}</div>
-                        <div class="kpi-subtitle">Fuentes de tráfico</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">🎯</div></div>
-                        <div class="kpi-label">Campañas con UTM</div>
-                        <div class="kpi-value">${campaignsArray.length}</div>
-                        <div class="kpi-subtitle">${Object.values(stats.porCampaign).reduce((s, c) => s + c.count, 0)} pedidos rastreados</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">💰</div></div>
-                        <div class="kpi-label">Mejor Ticket</div>
-                        <div class="kpi-value" style="font-size:16px">${canalesArray.sort((a, b) => b.ticketPromedio - a.ticketPromedio)[0]?.name || '-'}</div>
-                        <div class="kpi-subtitle">${formatCOP(canalesArray.sort((a, b) => b.ticketPromedio - a.ticketPromedio)[0]?.ticketPromedio || 0)} promedio</div>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">📢 Pedidos por Canal</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyChannelChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">💰 Revenue por Canal</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyChannelRevenueChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Performance por Canal de Adquisición
-                            <span class="table-badge">${canalesArray.length} canales</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Canal</th>
-                                <th>Pedidos</th>
-                                <th>% Participación</th>
-                                <th>Revenue</th>
-                                <th>Ticket Promedio</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${canalesArray.map((c, idx) => `
-                                <tr>
-                                    <td>
-                                        <strong>${c.name}</strong>
-                                        ${idx === 0 ? '<span style="color:var(--emerald);margin-left:5px">🏆</span>' : ''}
-                                    </td>
-                                    <td><strong>${formatNumber(c.count)}</strong></td>
-                                    <td>
-                                        <div style="display:flex;align-items:center;gap:8px">
-                                            <div style="flex:1;background:var(--bg-secondary);border-radius:4px;height:8px;overflow:hidden">
-                                                <div style="width:${c.participacion}%;background:var(--emerald);height:100%"></div>
-                                            </div>
-                                            <span>${c.participacion}%</span>
-                                        </div>
-                                    </td>
-                                    <td style="color:var(--emerald)">${formatCOP(c.total)}</td>
-                                    <td>${formatCOP(c.ticketPromedio)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-
-                ${campaignsArray.length > 0 ? `
-                <div class="table-container" style="margin-top:20px">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Campañas UTM Rastreadas
-                            <span class="table-badge">${campaignsArray.length} campañas</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Campaign ID / UTM</th>
-                                <th>Pedidos</th>
-                                <th>Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${campaignsArray.map((c, idx) => `
-                                <tr>
-                                    <td>${idx + 1}</td>
-                                    <td><strong>${c.name.substring(0, 40)}${c.name.length > 40 ? '...' : ''}</strong></td>
-                                    <td>${formatNumber(c.count)}</td>
-                                    <td style="color:var(--emerald)">${formatCOP(c.total)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                ` : ''}
-            `;
-        }
-
-        // ========== ANÁLISIS GEOGRÁFICO ==========
-        function renderShopifyGeo(stats) {
-            const ciudadesArray = Object.entries(stats.porCiudad)
-                .map(([name, data]) => ({
-                    name,
-                    ...data,
-                    participacion: (data.count / stats.totalOrders * 100).toFixed(1)
-                }))
-                .sort((a, b) => b.count - a.count);
-
-            const top10 = ciudadesArray.slice(0, 10);
-            const ciudadTop = ciudadesArray[0];
-
-            return `
-                <h3 style="color:var(--text-muted);font-size:12px;margin-bottom:15px;text-transform:uppercase;letter-spacing:1px">🌍 Análisis Geográfico</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">🏙️</div></div>
-                        <div class="kpi-label">Ciudades Activas</div>
-                        <div class="kpi-value">${stats.totalCiudades}</div>
-                        <div class="kpi-subtitle">Con al menos 1 pedido</div>
-                    </div>
-                    <div class="kpi-card emerald">
-                        <div class="kpi-header"><div class="kpi-icon">🏆</div></div>
-                        <div class="kpi-label">Ciudad #1</div>
-                        <div class="kpi-value" style="font-size:16px">${ciudadTop?.name || '-'}</div>
-                        <div class="kpi-subtitle">${formatNumber(ciudadTop?.count || 0)} pedidos (${ciudadTop?.participacion}%)</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">📊</div></div>
-                        <div class="kpi-label">Concentración Top 10</div>
-                        <div class="kpi-value">${stats.concentracionGeo}%</div>
-                        <div class="kpi-subtitle">Pedidos en top 10 ciudades</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">💰</div></div>
-                        <div class="kpi-label">Mejor Ticket</div>
-                        <div class="kpi-value" style="font-size:14px">${ciudadesArray.filter(c => c.count >= 5).sort((a, b) => b.ticketPromedio - a.ticketPromedio)[0]?.name || '-'}</div>
-                        <div class="kpi-subtitle">${formatCOP(ciudadesArray.filter(c => c.count >= 5).sort((a, b) => b.ticketPromedio - a.ticketPromedio)[0]?.ticketPromedio || 0)}</div>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">📍 Top 10 Ciudades por Pedidos</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyCitiesChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">💰 Top 10 Ciudades por Revenue</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyCitiesRevenueChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Ranking de Ciudades
-                            <span class="table-badge">${ciudadesArray.length} ciudades</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Ciudad</th>
-                                <th>Pedidos</th>
-                                <th>% Participación</th>
-                                <th>Revenue</th>
-                                <th>Ticket Promedio</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${ciudadesArray.slice(0, 30).map((c, idx) => `
-                                <tr>
-                                    <td>${idx + 1}</td>
-                                    <td>
-                                        <strong>${c.name}</strong>
-                                        ${idx < 3 ? '<span style="margin-left:5px">' + ['🥇', '🥈', '🥉'][idx] + '</span>' : ''}
-                                    </td>
-                                    <td><strong>${formatNumber(c.count)}</strong></td>
-                                    <td>
-                                        <div style="display:flex;align-items:center;gap:8px">
-                                            <div style="flex:1;max-width:100px;background:var(--bg-secondary);border-radius:4px;height:8px;overflow:hidden">
-                                                <div style="width:${Math.min(parseFloat(c.participacion) * 2, 100)}%;background:var(--blue);height:100%"></div>
-                                            </div>
-                                            <span>${c.participacion}%</span>
-                                        </div>
-                                    </td>
-                                    <td style="color:var(--emerald)">${formatCOP(c.total)}</td>
-                                    <td>${formatCOP(c.ticketPromedio)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        // ========== TENDENCIAS Y COHORTES ==========
-        function renderShopifyTendencias(stats) {
-            const mesesArray = Object.entries(stats.porMes)
-                .map(([mes, data]) => ({ mes, ...data }))
-                .sort((a, b) => a.mes.localeCompare(b.mes));
-
-            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-            const diasArray = Object.entries(stats.porDiaSemana)
-                .map(([dia, data]) => ({ dia: diasSemana[dia], diaNum: parseInt(dia), ...data }))
-                .sort((a, b) => a.diaNum - b.diaNum);
-
-            const horasArray = Object.entries(stats.porHora)
-                .map(([hora, data]) => ({ hora: parseInt(hora), ...data }))
-                .sort((a, b) => a.hora - b.hora);
-
-            const cohortesArray = Object.entries(stats.cohortes)
-                .map(([mes, data]) => ({ mes, ...data }))
-                .sort((a, b) => a.mes.localeCompare(b.mes));
-
-            const mejorDia = diasArray.sort((a, b) => b.count - a.count)[0];
-            const mejorHora = horasArray.sort((a, b) => b.count - a.count)[0];
-            const ultimoMoM = stats.crecimientoMoM.length > 0 ? stats.crecimientoMoM[stats.crecimientoMoM.length - 1] : null;
-
-            return `
-                <h3 style="color:var(--text-muted);font-size:12px;margin-bottom:15px;text-transform:uppercase;letter-spacing:1px">📈 Métricas de Crecimiento</h3>
-                <div class="kpi-grid">
-                    <div class="kpi-card ${ultimoMoM?.crecimiento >= 0 ? 'emerald' : 'red'}">
-                        <div class="kpi-header">
-                            <div class="kpi-icon">${ultimoMoM?.crecimiento >= 0 ? '📈' : '📉'}</div>
-                        </div>
-                        <div class="kpi-label">Crecimiento MoM</div>
-                        <div class="kpi-value">${ultimoMoM ? (ultimoMoM.crecimiento >= 0 ? '+' : '') + ultimoMoM.crecimiento + '%' : 'N/A'}</div>
-                        <div class="kpi-subtitle">vs mes anterior</div>
-                    </div>
-                    <div class="kpi-card blue">
-                        <div class="kpi-header"><div class="kpi-icon">📅</div></div>
-                        <div class="kpi-label">Meses con Datos</div>
-                        <div class="kpi-value">${mesesArray.length}</div>
-                        <div class="kpi-subtitle">Período analizado</div>
-                    </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-header"><div class="kpi-icon">🗓️</div></div>
-                        <div class="kpi-label">Mejor Día</div>
-                        <div class="kpi-value" style="font-size:16px">${mejorDia?.dia || '-'}</div>
-                        <div class="kpi-subtitle">${formatNumber(mejorDia?.count || 0)} pedidos</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-header"><div class="kpi-icon">🕐</div></div>
-                        <div class="kpi-label">Mejor Hora</div>
-                        <div class="kpi-value">${mejorHora ? mejorHora.hora + ':00' : '-'}</div>
-                        <div class="kpi-subtitle">${formatNumber(mejorHora?.count || 0)} pedidos</div>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card full-width">
-                        <div class="chart-header">
-                            <span class="chart-title">📈 Tendencia Mensual de Ventas</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyTrendChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">📅 Pedidos por Día de la Semana</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyDayChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <span class="chart-title">🕐 Pedidos por Hora del Día</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="shopifyHourChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <h3 style="color:var(--text-muted);font-size:12px;margin:25px 0 15px;text-transform:uppercase;letter-spacing:1px">📊 Análisis de Cohortes (Por Mes de Primera Compra)</h3>
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Cohortes de Clientes
-                            <span class="table-badge">${cohortesArray.length} cohortes</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Cohorte (Mes)</th>
-                                <th>Clientes Nuevos</th>
-                                <th>Total Pedidos</th>
-                                <th>Pedidos/Cliente</th>
-                                <th>Revenue Total</th>
-                                <th>LTV Cohorte</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${cohortesArray.map(c => `
-                                <tr>
-                                    <td><strong>${c.mes}</strong></td>
-                                    <td>${formatNumber(c.clientes)}</td>
-                                    <td>${formatNumber(c.pedidos)}</td>
-                                    <td>${c.clientes > 0 ? (c.pedidos / c.clientes).toFixed(1) : 0}x</td>
-                                    <td style="color:var(--emerald)">${formatCOP(c.totalGastado)}</td>
-                                    <td><strong>${formatCOP(c.clientes > 0 ? c.totalGastado / c.clientes : 0)}</strong></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3 style="color:var(--text-muted);font-size:12px;margin:25px 0 15px;text-transform:uppercase;letter-spacing:1px">📈 Crecimiento Mes sobre Mes</h3>
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-title">
-                            Evolución Mensual
-                            <span class="table-badge">${mesesArray.length} meses</span>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Mes</th>
-                                <th>Pedidos</th>
-                                <th>Revenue</th>
-                                <th>Ticket Promedio</th>
-                                <th>Crecimiento</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${mesesArray.map((m, idx) => {
-                                const mom = stats.crecimientoMoM.find(c => c.mes === m.mes);
-                                return `
-                                    <tr>
-                                        <td><strong>${m.mes}</strong></td>
-                                        <td>${formatNumber(m.count)}</td>
-                                        <td style="color:var(--emerald)">${formatCOP(m.total)}</td>
-                                        <td>${formatCOP(m.count > 0 ? m.total / m.count : 0)}</td>
-                                        <td>
-                                            ${mom ? `<span class="status-badge ${mom.crecimiento >= 0 ? 'entregado' : 'devolucion'}">${mom.crecimiento >= 0 ? '+' : ''}${mom.crecimiento}%</span>` : '-'}
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        function getShopifyStatusClass(status) {
-            if (!status) return 'proceso';
-            const s = status.toLowerCase();
-            if (s === 'paid' || s === 'pagado' || s === 'completed') return 'entregado';
-            if (s === 'refunded' || s === 'cancelled' || s === 'cancelado') return 'devolucion';
-            if (s === 'pending' || s === 'pendiente') return 'novedad';
-            if (s === 'fulfilled' || s === 'shipped') return 'transporte';
-            return 'proceso';
-        }
-
-        function searchShopifyTable(query) {
-            if (!shopifyProcessed) return;
-
-            query = query.toLowerCase();
-            filteredShopifyData = shopifyProcessed.orders.filter(o =>
-                (o.cliente || '').toLowerCase().includes(query) ||
-                (o.orderId + '').toLowerCase().includes(query) ||
-                (o.email || '').toLowerCase().includes(query) ||
-                (o.producto || '').toLowerCase().includes(query)
-            );
-
-            currentPage = 1;
-            renderContent();
-        }
-
-        function goToShopifyPage(page) {
-            const orders = filteredShopifyData || shopifyProcessed.orders;
-            const totalPages = Math.ceil(orders.length / itemsPerPage);
-            if (page < 1 || page > totalPages) return;
-            currentPage = page;
-            renderContent();
-        }
-
-        function showShopifyOrderDetail(id) {
-            const order = (filteredShopifyData || shopifyProcessed.orders).find(o => o.id === id);
-            if (!order) return;
-
-            document.getElementById('modalTitle').innerHTML = `🛒 Pedido ${order.orderId}`;
-            document.getElementById('modalBody').innerHTML = `
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-                    <div>
-                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">INFORMACIÓN DEL PEDIDO</h4>
-                        <p><strong>Pedido:</strong> ${order.orderId}</p>
-                        <p><strong>Fecha:</strong> ${order.fechaStr || '-'}</p>
-                        <p><strong>Estado Pago:</strong> <span class="status-badge ${getShopifyStatusClass(order.estatus)}">${order.estatus}</span></p>
-                        <p><strong>Estado Envío:</strong> ${order.fulfillmentStatus || 'Sin asignar'}</p>
-                        <p><strong>Método Pago:</strong> ${order.metodoPago || '-'}</p>
-                    </div>
-                    <div>
-                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">CLIENTE</h4>
-                        <p><strong>Nombre:</strong> ${order.cliente || '-'}</p>
-                        <p><strong>Email:</strong> ${order.email || '-'}</p>
-                        <p><strong>Teléfono:</strong> ${order.telefono || '-'}</p>
-                        <p><strong>Ciudad:</strong> ${order.ciudad || '-'}</p>
-                        <p><strong>País:</strong> ${order.pais || '-'}</p>
-                    </div>
-                </div>
-                <hr style="border-color:var(--border);margin:20px 0">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-                    <div>
-                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">PRODUCTO</h4>
-                        <p><strong>Producto:</strong> ${order.producto || '-'}</p>
-                        <p><strong>SKU:</strong> ${order.sku || '-'}</p>
-                        <p><strong>Cantidad:</strong> ${order.cantidad}</p>
-                        <p><strong>Precio Unit.:</strong> ${formatCOP(order.precioUnitario)}</p>
-                    </div>
-                    <div>
-                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">FINANCIERO</h4>
-                        <p><strong>Subtotal:</strong> ${formatCOP(order.subtotal)}</p>
-                        <p><strong>Descuento:</strong> <span style="color:var(--red)">-${formatCOP(order.descuento)}</span></p>
-                        <p><strong>Envío:</strong> ${formatCOP(order.envio)}</p>
-                        <p><strong>Total:</strong> <span style="color:var(--emerald);font-size:18px;font-weight:700">${formatCOP(order.total)}</span></p>
-                    </div>
-                </div>
-                ${order.notas ? `
-                    <hr style="border-color:var(--border);margin:20px 0">
-                    <div style="background:var(--blue-bg);padding:15px;border-radius:10px">
-                        <h4 style="color:var(--blue);font-size:12px;margin-bottom:10px">📝 NOTAS</h4>
-                        <p>${order.notas}</p>
-                    </div>
-                ` : ''}
-            `;
-            document.getElementById('modalOverlay').classList.add('active');
-        }
-
-        function initShopifyCharts(stats) {
-            // Destroy existing charts
-            Object.values(charts).forEach(c => c && c.destroy());
-            charts = {};
-
-            const chartOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#9ca3af', font: { size: 11 } } }
-                },
-                scales: {
-                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } }
-                }
-            };
-
-            const statusColors = {
-                'paid': '#10B981', 'pending': '#F59E0B', 'refunded': '#EF4444',
-                'cancelled': '#EF4444', 'partially_refunded': '#EC4899', 'voided': '#6B7280'
-            };
-
-            // Status chart (Payment Status)
-            const statusCtx = document.getElementById('shopifyStatusChart');
-            if (statusCtx) {
-                const statusData = Object.entries(stats.porEstatus).sort((a, b) => b[1].count - a[1].count);
-                charts.shopifyStatus = new Chart(statusCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: statusData.map(s => s[0]),
-                        datasets: [{ data: statusData.map(s => s[1].count), backgroundColor: statusData.map(s => statusColors[s[0].toLowerCase()] || '#8B5CF6') }]
-                    },
-                    options: { ...chartOptions, scales: {} }
-                });
-            }
-
-            // Fulfillment chart
-            const fulfillmentCtx = document.getElementById('shopifyFulfillmentChart');
-            if (fulfillmentCtx) {
-                const fulfillmentData = Object.entries(stats.porFulfillment).sort((a, b) => b[1].count - a[1].count);
-                charts.shopifyFulfillment = new Chart(fulfillmentCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: fulfillmentData.map(s => s[0] || 'Sin asignar'),
-                        datasets: [{ data: fulfillmentData.map(s => s[1].count), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899'] }]
-                    },
-                    options: { ...chartOptions, scales: {} }
-                });
-            }
-
-            // Channel chart (pedidos)
-            const channelCtx = document.getElementById('shopifyChannelChart');
-            if (channelCtx) {
-                const channelData = Object.entries(stats.porCanal).sort((a, b) => b[1].count - a[1].count).slice(0, 8);
-                charts.shopifyChannel = new Chart(channelCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: channelData.map(c => c[0]),
-                        datasets: [{ data: channelData.map(c => c[1].count), backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#EF4444', '#6366F1', '#14B8A6'] }]
-                    },
-                    options: { ...chartOptions, scales: {} }
-                });
-            }
-
-            // Channel Revenue chart
-            const channelRevenueCtx = document.getElementById('shopifyChannelRevenueChart');
-            if (channelRevenueCtx) {
-                const channelData = Object.entries(stats.porCanal).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
-                charts.shopifyChannelRevenue = new Chart(channelRevenueCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: channelData.map(c => c[0]),
-                        datasets: [{ label: 'Revenue', data: channelData.map(c => c[1].total), backgroundColor: '#10B981', borderRadius: 6 }]
-                    },
-                    options: { ...chartOptions, plugins: { legend: { display: false } } }
-                });
-            }
-
-            // Cities chart (pedidos)
-            const citiesCtx = document.getElementById('shopifyCitiesChart');
-            if (citiesCtx) {
-                const citiesData = Object.entries(stats.porCiudad).sort((a, b) => b[1].count - a[1].count).slice(0, 10);
-                charts.shopifyCities = new Chart(citiesCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: citiesData.map(c => c[0].substring(0, 12)),
-                        datasets: [{ label: 'Pedidos', data: citiesData.map(c => c[1].count), backgroundColor: '#3B82F6', borderRadius: 6 }]
-                    },
-                    options: { ...chartOptions, plugins: { legend: { display: false } } }
-                });
-            }
-
-            // Cities Revenue chart
-            const citiesRevenueCtx = document.getElementById('shopifyCitiesRevenueChart');
-            if (citiesRevenueCtx) {
-                const citiesData = Object.entries(stats.porCiudad).sort((a, b) => b[1].total - a[1].total).slice(0, 10);
-                charts.shopifyCitiesRevenue = new Chart(citiesRevenueCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: citiesData.map(c => c[0].substring(0, 12)),
-                        datasets: [{ label: 'Revenue', data: citiesData.map(c => c[1].total), backgroundColor: '#10B981', borderRadius: 6 }]
-                    },
-                    options: { ...chartOptions, plugins: { legend: { display: false } } }
-                });
-            }
-
-            // Products chart
-            const productsCtx = document.getElementById('shopifyProductsChart');
-            if (productsCtx) {
-                const prodData = Object.entries(stats.porProducto).sort((a, b) => b[1].ventas - a[1].ventas).slice(0, 10);
-                charts.shopifyProducts = new Chart(productsCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: prodData.map(p => p[0].substring(0, 18)),
-                        datasets: [{ label: 'Ventas', data: prodData.map(p => p[1].ventas), backgroundColor: '#96bf48', borderRadius: 6 }]
-                    },
-                    options: chartOptions
-                });
-            }
-
-            // RFM Segments chart
-            const rfmCtx = document.getElementById('shopifyRFMChart');
-            if (rfmCtx) {
-                charts.shopifyRFM = new Chart(rfmCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Champions', 'Leales', 'Potenciales', 'En Riesgo', 'No Perder', 'Hibernando'],
-                        datasets: [{
-                            data: [stats.rfmSegments.champions, stats.rfmSegments.loyalCustomers, stats.rfmSegments.potentialLoyalist,
-                                   stats.rfmSegments.atRisk, stats.rfmSegments.cantLose, stats.rfmSegments.hibernating],
-                            backgroundColor: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#6B7280']
-                        }]
-                    },
-                    options: { ...chartOptions, scales: {} }
-                });
-            }
-
-            // Top Clientes chart
-            const topClientesCtx = document.getElementById('shopifyTopClientesChart');
-            if (topClientesCtx) {
-                const topClientes = stats.clientesRFM.sort((a, b) => b.monetario - a.monetario).slice(0, 8);
-                charts.shopifyTopClientes = new Chart(topClientesCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: topClientes.map(c => (c.nombre || c.email || '').substring(0, 12)),
-                        datasets: [{ label: 'Gastado', data: topClientes.map(c => c.monetario), backgroundColor: '#8B5CF6', borderRadius: 6 }]
-                    },
-                    options: { ...chartOptions, plugins: { legend: { display: false } } }
-                });
-            }
-
-            // Trend chart (monthly)
-            const trendCtx = document.getElementById('shopifyTrendChart');
-            if (trendCtx) {
-                const meses = Object.entries(stats.porMes).sort((a, b) => a[0].localeCompare(b[0]));
-                charts.shopifyTrend = new Chart(trendCtx, {
-                    type: 'line',
-                    data: {
-                        labels: meses.map(m => m[0]),
-                        datasets: [
-                            { label: 'Revenue', data: meses.map(m => m[1].total), borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 },
-                            { label: 'Pedidos', data: meses.map(m => m[1].count * (stats.ticketPromedio || 1)), borderColor: '#3B82F6', borderDash: [5, 5], tension: 0.4, yAxisID: 'y1' }
-                        ]
-                    },
-                    options: {
-                        ...chartOptions,
-                        scales: {
-                            ...chartOptions.scales,
-                            y1: { position: 'right', grid: { display: false }, ticks: { color: '#9ca3af' } }
-                        }
-                    }
-                });
-            }
-
-            // Day of week chart
-            const dayCtx = document.getElementById('shopifyDayChart');
-            if (dayCtx) {
-                const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-                const diasData = diasSemana.map((d, i) => stats.porDiaSemana[i]?.count || 0);
-                charts.shopifyDay = new Chart(dayCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: diasSemana,
-                        datasets: [{ label: 'Pedidos', data: diasData, backgroundColor: '#8B5CF6', borderRadius: 6 }]
-                    },
-                    options: { ...chartOptions, plugins: { legend: { display: false } } }
-                });
-            }
-
-            // Hour chart
-            const hourCtx = document.getElementById('shopifyHourChart');
-            if (hourCtx) {
-                const horasData = Array.from({ length: 24 }, (_, i) => stats.porHora[i]?.count || 0);
-                charts.shopifyHour = new Chart(hourCtx, {
-                    type: 'line',
-                    data: {
-                        labels: Array.from({ length: 24 }, (_, i) => i + 'h'),
-                        datasets: [{ label: 'Pedidos', data: horasData, borderColor: '#F59E0B', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.4 }]
-                    },
-                    options: chartOptions
-                });
-            }
         }
 
         // Helper functions
