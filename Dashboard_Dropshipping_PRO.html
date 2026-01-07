@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Dropshipping PRO - Bacano Store</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f0f14;
+            --bg-secondary: #1a1a24;
+            --bg-card: #22222e;
+            --border: #2d2d3a;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --emerald: #10B981;
+            --emerald-bg: rgba(16,185,129,0.15);
+            --blue: #3B82F6;
+            --blue-bg: rgba(59,130,246,0.15);
+            --amber: #F59E0B;
+            --amber-bg: rgba(245,158,11,0.15);
+            --red: #EF4444;
+            --red-bg: rgba(239,68,68,0.15);
+            --violet: #8B5CF6;
+            --violet-bg: rgba(139,92,246,0.15);
+            --pink: #EC4899;
+            --pink-bg: rgba(236,72,153,0.15);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--emerald), var(--blue));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        
+        .logo-text h1 { font-size: 18px; font-weight: 700; }
+        .logo-text p { font-size: 11px; color: var(--text-muted); }
+        
+        /* Nav Menu */
+        .nav-menu { list-style: none; }
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 5px;
+            transition: all 0.2s;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+        .nav-item.active { background: var(--emerald-bg); color: var(--emerald); font-weight: 500; }
+        .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+        
+        /* Upload Section in Sidebar */
+        .sidebar-upload {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        .sidebar-upload h3 { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .upload-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .upload-btn:hover { border-color: var(--emerald); color: var(--emerald); }
+        .upload-btn.loaded { border-color: var(--emerald); background: var(--emerald-bg); color: var(--emerald); border-style: solid; }
+        .upload-btn input { display: none; }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 25px;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .header-title h2 { font-size: 24px; font-weight: 700; }
+        .header-title p { color: var(--text-muted); font-size: 14px; }
+        
+        .header-actions { display: flex; gap: 10px; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--emerald); color: white; }
+        .btn-primary:hover { background: #0d9668; }
+        .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--bg-secondary); }
+        
+        /* Filters Bar */
+        .filters-bar {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; }
+        .filter-group label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .filter-group input, .filter-group select {
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            min-width: 150px;
+        }
+        .filter-group input:focus, .filter-group select:focus { outline: none; border-color: var(--emerald); }
+        .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-chip {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-chip:hover { border-color: var(--emerald); }
+        .filter-chip.active { background: var(--emerald-bg); border-color: var(--emerald); color: var(--emerald); }
+        
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .kpi-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        .kpi-card.emerald::before { background: var(--emerald); }
+        .kpi-card.blue::before { background: var(--blue); }
+        .kpi-card.amber::before { background: var(--amber); }
+        .kpi-card.red::before { background: var(--red); }
+        .kpi-card.violet::before { background: var(--violet); }
+        .kpi-card.pink::before { background: var(--pink); }
+        
+        .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .kpi-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .kpi-card.emerald .kpi-icon { background: var(--emerald-bg); }
+        .kpi-card.blue .kpi-icon { background: var(--blue-bg); }
+        .kpi-card.amber .kpi-icon { background: var(--amber-bg); }
+        .kpi-card.red .kpi-icon { background: var(--red-bg); }
+        .kpi-card.violet .kpi-icon { background: var(--violet-bg); }
+        .kpi-card.pink .kpi-icon { background: var(--pink-bg); }
+        
+        .kpi-trend {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .kpi-trend.up { background: var(--emerald-bg); color: var(--emerald); }
+        .kpi-trend.down { background: var(--red-bg); color: var(--red); }
+        
+        .kpi-label { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+        .kpi-value { font-size: 28px; font-weight: 700; }
+        .kpi-card.emerald .kpi-value { color: var(--emerald); }
+        .kpi-card.blue .kpi-value { color: var(--blue); }
+        .kpi-card.amber .kpi-value { color: var(--amber); }
+        .kpi-card.red .kpi-value { color: var(--red); }
+        .kpi-card.violet .kpi-value { color: var(--violet); }
+        .kpi-card.pink .kpi-value { color: var(--pink); }
+        
+        .kpi-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+        
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .chart-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+        }
+        .chart-card.full-width { grid-column: span 2; }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .chart-title { font-size: 16px; font-weight: 600; }
+        .chart-actions { display: flex; gap: 8px; }
+        .chart-btn {
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .chart-btn:hover { color: var(--text-primary); }
+        .chart-wrapper { height: 280px; position: relative; }
+        
+        /* Data Table */
+        .table-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .table-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .table-badge {
+            background: var(--blue-bg);
+            color: var(--blue);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .table-search {
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            width: 250px;
+        }
+        .table-search::placeholder { color: var(--text-muted); }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            text-align: left;
+            padding: 14px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .data-table th:hover { color: var(--text-primary); }
+        .data-table td {
+            padding: 14px 20px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .data-table tr:hover { background: rgba(255,255,255,0.02); }
+        .data-table tr:last-child td { border-bottom: none; }
+        
+        /* Status Badges */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .status-badge.entregado { background: var(--emerald-bg); color: var(--emerald); }
+        .status-badge.devolucion { background: var(--red-bg); color: var(--red); }
+        .status-badge.transporte { background: var(--blue-bg); color: var(--blue); }
+        .status-badge.novedad { background: var(--amber-bg); color: var(--amber); }
+        .status-badge.cancelado { background: var(--red-bg); color: var(--red); }
+        .status-badge.proceso { background: var(--violet-bg); color: var(--violet); }
+        
+        /* Clickable rows */
+        .clickable { cursor: pointer; }
+        .clickable:hover { background: rgba(255,255,255,0.05) !important; }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { font-size: 20px; display: flex; align-items: center; gap: 12px; }
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover { color: var(--text-primary); background: var(--red-bg); }
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .empty-state .icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
+        .empty-state h3 { font-size: 20px; margin-bottom: 10px; color: var(--text-secondary); }
+        .empty-state p { color: var(--text-muted); }
+        
+        /* Tab Content */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Status Summary Cards */
+        .status-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .status-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .status-card:hover { transform: translateY(-2px); border-color: var(--emerald); }
+        .status-card.active { border-color: var(--emerald); background: var(--emerald-bg); }
+        .status-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .status-card-name { font-size: 13px; color: var(--text-secondary); }
+        .status-card-count { font-size: 24px; font-weight: 700; }
+        .status-card-pct { font-size: 12px; color: var(--text-muted); }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+        }
+        .pagination-info { font-size: 13px; color: var(--text-muted); }
+        .pagination-btns { display: flex; gap: 8px; }
+        .page-btn {
+            padding: 8px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .page-btn:hover { color: var(--text-primary); }
+        .page-btn.active { background: var(--emerald); color: white; border-color: var(--emerald); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Print styles */
+        @media print {
+            .sidebar, .header-actions, .filters-bar, .upload-btn, .modal-overlay { display: none !important; }
+            .main-content { margin-left: 0 !important; }
+            .kpi-card, .chart-card, .table-container { break-inside: avoid; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-card.full-width { grid-column: span 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .filters-bar { flex-direction: column; }
+            .filter-group { width: 100%; }
+            .filter-group input, .filter-group select { width: 100%; }
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--emerald);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">📦</div>
+                <div class="logo-text">
+                    <h1>Bacano Store</h1>
+                    <p>Dashboard PRO</p>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="showTab('resumen')">
+                    <span class="icon">📊</span> Resumen General
+                </li>
+                <li class="nav-item" onclick="showTab('pedidos')">
+                    <span class="icon">📦</span> Detalle Pedidos
+                </li>
+                <li class="nav-item" onclick="showTab('estatus')">
+                    <span class="icon">🚚</span> Por Estatus
+                </li>
+                <li class="nav-item" onclick="showTab('productos')">
+                    <span class="icon">🛍️</span> Productos
+                </li>
+                <li class="nav-item" onclick="showTab('ciudades')">
+                    <span class="icon">📍</span> Ciudades
+                </li>
+                <li class="nav-item" onclick="showTab('transportadoras')">
+                    <span class="icon">🚛</span> Transportadoras
+                </li>
+                <li class="nav-item" onclick="showTab('rentabilidad')">
+                    <span class="icon">💰</span> Rentabilidad
+                </li>
+            </ul>
+            
+            <div class="sidebar-upload">
+                <h3>Cargar Datos</h3>
+                <label class="upload-btn" id="dropiUploadBtn">
+                    <input type="file" accept=".xlsx,.xls" onchange="loadFile(this, 'dropi')">
+                    📊 Reporte DROPI
+                </label>
+                <label class="upload-btn" id="shopifyUploadBtn">
+                    <input type="file" accept=".xlsx,.xls" onchange="loadFile(this, 'shopify')">
+                    🛒 Pedidos SHOPIFY
+                </label>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <div class="header-title">
+                    <h2 id="pageTitle">Resumen General</h2>
+                    <p id="pageSubtitle">Vista general de tu negocio</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportPDF()">
+                        📄 Exportar PDF
+                    </button>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        🔄 Actualizar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filters-bar" id="filtersBar">
+                <div class="filter-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date" id="filterDateStart" onchange="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label>Fecha Fin</label>
+                    <input type="date" id="filterDateEnd" onchange="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label>Período</label>
+                    <select id="filterPeriod" onchange="setDatePeriod()">
+                        <option value="">Personalizado</option>
+                        <option value="today">Hoy</option>
+                        <option value="yesterday">Ayer</option>
+                        <option value="week">Esta Semana</option>
+                        <option value="lastweek">Semana Pasada</option>
+                        <option value="month">Este Mes</option>
+                        <option value="lastmonth">Mes Pasado</option>
+                        <option value="all" selected>Todo</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Estatus</label>
+                    <select id="filterStatus" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Transportadora</label>
+                    <select id="filterTransport" onchange="applyFilters()">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Ciudad</label>
+                    <select id="filterCity" onchange="applyFilters()">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary" onclick="clearFilters()">✕ Limpiar</button>
+            </div>
+            
+            <!-- Content Area -->
+            <div id="content">
+                <div class="empty-state">
+                    <div class="icon">📁</div>
+                    <h3>Sube tu reporte de Dropi</h3>
+                    <p>Carga tu archivo Excel para ver el análisis completo</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal for details -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detalles</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="exportModalPDF()">📄 Exportar PDF</button>
+                <button class="btn btn-primary" onclick="closeModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let dropiData = null;
+        let shopifyData = null;
+        let filteredData = null;
+        let currentTab = 'resumen';
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        
+        // Charts instances
+        let charts = {};
+        
+        // Load file
+        function loadFile(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+                    const data = XLSX.utils.sheet_to_json(sheet);
+                    
+                    if (type === 'dropi') {
+                        dropiData = processDropiData(data);
+                        filteredData = [...dropiData.orders];
+                        document.getElementById('dropiUploadBtn').classList.add('loaded');
+                        document.getElementById('dropiUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'dropi\')">✓ Dropi cargado';
+                        populateFilters();
+                    } else {
+                        shopifyData = data;
+                        document.getElementById('shopifyUploadBtn').classList.add('loaded');
+                        document.getElementById('shopifyUploadBtn').innerHTML = '<input type="file" accept=".xlsx,.xls" onchange="loadFile(this, \'shopify\')">✓ Shopify cargado';
+                    }
+                    
+                    renderContent();
+                } catch (error) {
+                    alert('Error al procesar: ' + error.message);
+                    console.error(error);
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+        
+        // Process Dropi data
+        function processDropiData(data) {
+            const orders = data.map((row, idx) => {
+                // Parse date
+                let fecha = row['FECHA'];
+                if (fecha) {
+                    if (typeof fecha === 'number') {
+                        // Excel date number
+                        const excelDate = new Date((fecha - 25569) * 86400 * 1000);
+                        fecha = excelDate;
+                    } else if (typeof fecha === 'string') {
+                        const parts = fecha.split('-');
+                        if (parts.length === 3) {
+                            fecha = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+                    }
+                }
+                
+                return {
+                    id: idx + 1,
+                    orderId: row['ID'] || '',
+                    fecha: fecha,
+                    fechaStr: row['FECHA'] || '',
+                    cliente: row['NOMBRE CLIENTE'] || '',
+                    telefono: row['TELÉFONO'] || '',
+                    email: row['EMAIL'] || '',
+                    estatus: row['ESTATUS'] || '',
+                    ciudad: row['CIUDAD DESTINO'] || '',
+                    departamento: row['DEPARTAMENTO DESTINO'] || '',
+                    direccion: row['DIRECCION'] || '',
+                    transportadora: row['TRANSPORTADORA'] || '',
+                    total: Number(row['TOTAL DE LA ORDEN']) || 0,
+                    ganancia: Number(row['GANANCIA']) || 0,
+                    flete: Number(row['PRECIO FLETE']) || 0,
+                    costoDevolucion: Number(row['COSTO DEVOLUCION FLETE']) || 0,
+                    costoProveedor: Number(row['PRECIO PROVEEDOR X CANTIDAD']) || 0,
+                    producto: row['PRODUCTO'] || '',
+                    variacion: row['VARIACION'] || '',
+                    cantidad: Number(row['CANTIDAD']) || 1,
+                    novedad: row['NOVEDAD'] || '',
+                    solucionNovedad: row['SOLUCIÓN'] || '',
+                    ultimoMovimiento: row['ÚLTIMO MOVIMIENTO'] || '',
+                    guia: row['NÚMERO GUIA'] || ''
+                };
+            });
+            
+            // Calculate stats
+            const stats = calculateStats(orders);
+            
+            return { orders, stats };
+        }
+        
+        function calculateStats(orders) {
+            const total = orders.length;
+            const entregados = orders.filter(o => o.estatus === 'ENTREGADO');
+            const devoluciones = orders.filter(o => ['DEVOLUCION', 'CANCELADO'].includes(o.estatus));
+            const enProceso = orders.filter(o => !['ENTREGADO', 'DEVOLUCION', 'CANCELADO'].includes(o.estatus));
+            const conNovedad = orders.filter(o => o.novedad);
+            
+            const finalizados = entregados.length + devoluciones.length;
+            const tasaEfectividad = finalizados > 0 ? (entregados.length / finalizados * 100).toFixed(1) : 0;
+            const tasaDevolucion = finalizados > 0 ? (devoluciones.length / finalizados * 100).toFixed(1) : 0;
+            
+            const ventasEfectivas = entregados.reduce((sum, o) => sum + o.total, 0);
+            const gananciaTotal = entregados.reduce((sum, o) => sum + o.ganancia, 0);
+            const ticketPromedio = entregados.length > 0 ? ventasEfectivas / entregados.length : 0;
+            const margen = ventasEfectivas > 0 ? (gananciaTotal / ventasEfectivas * 100).toFixed(1) : 0;
+            
+            // Por estatus
+            const porEstatus = {};
+            orders.forEach(o => {
+                if (!porEstatus[o.estatus]) porEstatus[o.estatus] = { count: 0, total: 0, orders: [] };
+                porEstatus[o.estatus].count++;
+                porEstatus[o.estatus].total += o.total;
+                porEstatus[o.estatus].orders.push(o);
+            });
+            
+            // Por transportadora
+            const porTransportadora = {};
+            orders.forEach(o => {
+                if (!o.transportadora) return;
+                if (!porTransportadora[o.transportadora]) {
+                    porTransportadora[o.transportadora] = { total: 0, entregados: 0, devoluciones: 0, orders: [] };
+                }
+                porTransportadora[o.transportadora].total++;
+                porTransportadora[o.transportadora].orders.push(o);
+                if (o.estatus === 'ENTREGADO') porTransportadora[o.transportadora].entregados++;
+                if (['DEVOLUCION', 'CANCELADO'].includes(o.estatus)) porTransportadora[o.transportadora].devoluciones++;
+            });
+            
+            // Por ciudad
+            const porCiudad = {};
+            orders.forEach(o => {
+                if (!o.ciudad) return;
+                if (!porCiudad[o.ciudad]) {
+                    porCiudad[o.ciudad] = { total: 0, entregados: 0, devoluciones: 0, ingresos: 0, orders: [] };
+                }
+                porCiudad[o.ciudad].total++;
+                porCiudad[o.ciudad].ingresos += o.total;
+                porCiudad[o.ciudad].orders.push(o);
+                if (o.estatus === 'ENTREGADO') porCiudad[o.ciudad].entregados++;
+                if (['DEVOLUCION', 'CANCELADO'].includes(o.estatus)) porCiudad[o.ciudad].devoluciones++;
+            });
+            
+            // Por producto
+            const porProducto = {};
+            orders.forEach(o => {
+                if (!o.producto) return;
+                if (!porProducto[o.producto]) {
+                    porProducto[o.producto] = { total: 0, ventas: 0, ganancia: 0, entregados: 0, orders: [] };
+                }
+                porProducto[o.producto].total++;
+                porProducto[o.producto].ventas += o.total;
+                porProducto[o.producto].ganancia += o.ganancia;
+                porProducto[o.producto].orders.push(o);
+                if (o.estatus === 'ENTREGADO') porProducto[o.producto].entregados++;
+            });
+            
+            return {
+                total,
+                entregados: entregados.length,
+                devoluciones: devoluciones.length,
+                enProceso: enProceso.length,
+                conNovedad: conNovedad.length,
+                tasaEfectividad,
+                tasaDevolucion,
+                ventasEfectivas,
+                gananciaTotal,
+                ticketPromedio,
+                margen,
+                porEstatus,
+                porTransportadora,
+                porCiudad,
+                porProducto
+            };
+        }
+        
+        // Populate filter dropdowns
+        function populateFilters() {
+            if (!dropiData) return;
+            
+            // Statuses
+            const statusSelect = document.getElementById('filterStatus');
+            statusSelect.innerHTML = '<option value="">Todos</option>';
+            Object.keys(dropiData.stats.porEstatus).sort().forEach(s => {
+                statusSelect.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+            
+            // Transportadoras
+            const transportSelect = document.getElementById('filterTransport');
+            transportSelect.innerHTML = '<option value="">Todas</option>';
+            Object.keys(dropiData.stats.porTransportadora).sort().forEach(t => {
+                transportSelect.innerHTML += `<option value="${t}">${t}</option>`;
+            });
+            
+            // Cities
+            const citySelect = document.getElementById('filterCity');
+            citySelect.innerHTML = '<option value="">Todas</option>';
+            Object.keys(dropiData.stats.porCiudad).sort((a,b) => 
+                dropiData.stats.porCiudad[b].total - dropiData.stats.porCiudad[a].total
+            ).slice(0, 50).forEach(c => {
+                citySelect.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+        }
+        
+        // Date period filter
+        function setDatePeriod() {
+            const period = document.getElementById('filterPeriod').value;
+            const today = new Date();
+            let start, end;
+            
+            switch(period) {
+                case 'today':
+                    start = end = today;
+                    break;
+                case 'yesterday':
+                    start = end = new Date(today.setDate(today.getDate() - 1));
+                    break;
+                case 'week':
+                    start = new Date(today.setDate(today.getDate() - today.getDay()));
+                    end = new Date();
+                    break;
+                case 'lastweek':
+                    const lastWeek = new Date(today.setDate(today.getDate() - 7));
+                    start = new Date(lastWeek.setDate(lastWeek.getDate() - lastWeek.getDay()));
+                    end = new Date(start);
+                    end.setDate(end.getDate() + 6);
+                    break;
+                case 'month':
+                    start = new Date(today.getFullYear(), today.getMonth(), 1);
+                    end = new Date();
+                    break;
+                case 'lastmonth':
+                    start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    end = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'all':
+                default:
+                    document.getElementById('filterDateStart').value = '';
+                    document.getElementById('filterDateEnd').value = '';
+                    applyFilters();
+                    return;
+            }
+            
+            if (start) document.getElementById('filterDateStart').value = start.toISOString().split('T')[0];
+            if (end) document.getElementById('filterDateEnd').value = end.toISOString().split('T')[0];
+            applyFilters();
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            if (!dropiData) return;
+            
+            const dateStart = document.getElementById('filterDateStart').value;
+            const dateEnd = document.getElementById('filterDateEnd').value;
+            const status = document.getElementById('filterStatus').value;
+            const transport = document.getElementById('filterTransport').value;
+            const city = document.getElementById('filterCity').value;
+            
+            filteredData = dropiData.orders.filter(o => {
+                if (dateStart && o.fecha) {
+                    const orderDate = new Date(o.fecha);
+                    if (orderDate < new Date(dateStart)) return false;
+                }
+                if (dateEnd && o.fecha) {
+                    const orderDate = new Date(o.fecha);
+                    if (orderDate > new Date(dateEnd + 'T23:59:59')) return false;
+                }
+                if (status && o.estatus !== status) return false;
+                if (transport && o.transportadora !== transport) return false;
+                if (city && o.ciudad !== city) return false;
+                return true;
+            });
+            
+            currentPage = 1;
+            renderContent();
+        }
+        
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('filterDateStart').value = '';
+            document.getElementById('filterDateEnd').value = '';
+            document.getElementById('filterPeriod').value = 'all';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterTransport').value = '';
+            document.getElementById('filterCity').value = '';
+            
+            if (dropiData) filteredData = [...dropiData.orders];
+            renderContent();
+        }
+        
+        // Show tab
+        function showTab(tab) {
+            currentTab = tab;
+            currentPage = 1;
+            
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+            
+            const titles = {
+                resumen: ['Resumen General', 'Vista general de tu negocio'],
+                pedidos: ['Detalle de Pedidos', 'Lista completa de todos los pedidos'],
+                estatus: ['Análisis por Estatus', 'Desglose por estado de los pedidos'],
+                productos: ['Análisis de Productos', 'Rendimiento por producto'],
+                ciudades: ['Análisis por Ciudad', 'Rendimiento por ubicación'],
+                transportadoras: ['Transportadoras', 'Efectividad por transportadora'],
+                rentabilidad: ['Rentabilidad', 'Análisis financiero detallado']
+            };
+            
+            document.getElementById('pageTitle').textContent = titles[tab][0];
+            document.getElementById('pageSubtitle').textContent = titles[tab][1];
+            
+            renderContent();
+        }
+        
+        // Render content
+        function renderContent() {
+            if (!dropiData) return;
+            
+            const stats = calculateStats(filteredData);
+            let html = '';
+            
+            switch(currentTab) {
+                case 'resumen':
+                    html = renderResumen(stats);
+                    break;
+                case 'pedidos':
+                    html = renderPedidos(stats);
+                    break;
+                case 'estatus':
+                    html = renderEstatus(stats);
+                    break;
+                case 'productos':
+                    html = renderProductos(stats);
+                    break;
+                case 'ciudades':
+                    html = renderCiudades(stats);
+                    break;
+                case 'transportadoras':
+                    html = renderTransportadoras(stats);
+                    break;
+                case 'rentabilidad':
+                    html = renderRentabilidad(stats);
+                    break;
+            }
+            
+            document.getElementById('content').innerHTML = html;
+            
+            // Initialize charts after DOM update
+            setTimeout(() => initCharts(stats), 100);
+        }
+        
+        function formatCOP(value) {
+            if (!value || isNaN(value)) return '$0';
+            if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+            if (value >= 1000) return '$' + Math.round(value / 1000) + 'K';
+            return '$' + value.toLocaleString('es-CO');
+        }
+        
+        function formatNumber(n) {
+            return n.toLocaleString('es-CO');
+        }
+        
+        // Render Resumen
+        function renderResumen(stats) {
+            return `
+                <div class="kpi-grid">
+                    <div class="kpi-card blue">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">📦</div>
+                        </div>
+                        <div class="kpi-label">Total Pedidos</div>
+                        <div class="kpi-value">${formatNumber(stats.total)}</div>
+                        <div class="kpi-subtitle">Filtrados de ${formatNumber(dropiData.orders.length)}</div>
+                    </div>
+                    <div class="kpi-card ${Number(stats.tasaEfectividad) >= 80 ? 'emerald' : 'amber'}">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">🎯</div>
+                            ${Number(stats.tasaEfectividad) < 75 ? '<span class="kpi-trend down">⚠️ Bajo</span>' : ''}
+                        </div>
+                        <div class="kpi-label">Tasa de Efectividad</div>
+                        <div class="kpi-value">${stats.tasaEfectividad}%</div>
+                        <div class="kpi-subtitle">${formatNumber(stats.entregados)} entregados</div>
+                    </div>
+                    <div class="kpi-card ${Number(stats.tasaDevolucion) <= 20 ? 'emerald' : 'red'}">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">↩️</div>
+                            ${Number(stats.tasaDevolucion) > 25 ? '<span class="kpi-trend down">⚠️ Alto</span>' : ''}
+                        </div>
+                        <div class="kpi-label">Tasa de Devolución</div>
+                        <div class="kpi-value">${stats.tasaDevolucion}%</div>
+                        <div class="kpi-subtitle">${formatNumber(stats.devoluciones)} devueltos</div>
+                    </div>
+                    <div class="kpi-card amber">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">⏳</div>
+                        </div>
+                        <div class="kpi-label">En Proceso</div>
+                        <div class="kpi-value">${formatNumber(stats.enProceso)}</div>
+                        <div class="kpi-subtitle">${(stats.enProceso / stats.total * 100).toFixed(1)}% del total</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-grid">
+                    <div class="kpi-card emerald">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">💰</div>
+                        </div>
+                        <div class="kpi-label">Ventas Efectivas</div>
+                        <div class="kpi-value">${formatCOP(stats.ventasEfectivas)}</div>
+                        <div class="kpi-subtitle">Solo pedidos entregados</div>
+                    </div>
+                    <div class="kpi-card violet">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">📈</div>
+                        </div>
+                        <div class="kpi-label">Ganancia Total</div>
+                        <div class="kpi-value">${formatCOP(stats.gananciaTotal)}</div>
+                        <div class="kpi-subtitle">Margen: ${stats.margen}%</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">🎫</div>
+                        </div>
+                        <div class="kpi-label">Ticket Promedio</div>
+                        <div class="kpi-value">${formatCOP(stats.ticketPromedio)}</div>
+                    </div>
+                    <div class="kpi-card ${stats.conNovedad > stats.total * 0.15 ? 'red' : 'amber'}">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">⚠️</div>
+                        </div>
+                        <div class="kpi-label">Con Novedad</div>
+                        <div class="kpi-value">${formatNumber(stats.conNovedad)}</div>
+                        <div class="kpi-subtitle">${(stats.conNovedad / stats.total * 100).toFixed(1)}% del total</div>
+                    </div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">📊 Distribución por Estatus</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">🚚 Efectividad por Transportadora</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="transportChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <span class="chart-title">📍 Top 10 Ciudades por Volumen</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="citiesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render Pedidos (detailed list)
+        function renderPedidos(stats) {
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageData = filteredData.slice(startIdx, endIdx);
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            
+            return `
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">
+                            Todos los Pedidos
+                            <span class="table-badge">${formatNumber(filteredData.length)} registros</span>
+                        </div>
+                        <input type="text" class="table-search" placeholder="🔍 Buscar por cliente, ID, ciudad..." oninput="searchTable(this.value)">
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable('orderId')">ID ↕</th>
+                                    <th onclick="sortTable('fechaStr')">Fecha ↕</th>
+                                    <th onclick="sortTable('cliente')">Cliente ↕</th>
+                                    <th onclick="sortTable('ciudad')">Ciudad ↕</th>
+                                    <th onclick="sortTable('producto')">Producto ↕</th>
+                                    <th onclick="sortTable('total')">Total ↕</th>
+                                    <th onclick="sortTable('estatus')">Estatus ↕</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pageData.map(o => `
+                                    <tr class="clickable" ondblclick="showOrderDetail(${o.id})">
+                                        <td><strong>${o.orderId}</strong></td>
+                                        <td>${o.fechaStr}</td>
+                                        <td>${o.cliente || '-'}</td>
+                                        <td>${o.ciudad || '-'}</td>
+                                        <td>${(o.producto || '').substring(0, 20)}${(o.producto || '').length > 20 ? '...' : ''}</td>
+                                        <td><strong>${formatCOP(o.total)}</strong></td>
+                                        <td><span class="status-badge ${getStatusClass(o.estatus)}">${o.estatus}</span></td>
+                                        <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="showOrderDetail(${o.id})">Ver</button></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <span class="pagination-info">Mostrando ${startIdx + 1}-${Math.min(endIdx, filteredData.length)} de ${formatNumber(filteredData.length)}</span>
+                        <div class="pagination-btns">
+                            <button class="page-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>««</button>
+                            <button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>«</button>
+                            ${generatePaginationButtons(currentPage, totalPages)}
+                            <button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>»</button>
+                            <button class="page-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>»»</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render Estatus
+        function renderEstatus(stats) {
+            const estatusArray = Object.entries(stats.porEstatus)
+                .map(([name, data]) => ({ name, ...data, pct: (data.count / stats.total * 100).toFixed(1) }))
+                .sort((a, b) => b.count - a.count);
+            
+            return `
+                <div class="status-summary">
+                    ${estatusArray.map(s => `
+                        <div class="status-card clickable" onclick="showStatusDetail('${s.name}')">
+                            <div class="status-card-header">
+                                <span class="status-badge ${getStatusClass(s.name)}">${s.name}</span>
+                            </div>
+                            <div class="status-card-count">${formatNumber(s.count)}</div>
+                            <div class="status-card-pct">${s.pct}% del total • ${formatCOP(s.total)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">
+                            Resumen por Estatus
+                            <span class="table-badge">Click en una fila para ver detalle</span>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Estatus</th>
+                                <th>Cantidad</th>
+                                <th>% del Total</th>
+                                <th>Ingresos</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${estatusArray.map(s => `
+                                <tr class="clickable" onclick="showStatusDetail('${s.name}')">
+                                    <td><span class="status-badge ${getStatusClass(s.name)}">${s.name}</span></td>
+                                    <td><strong>${formatNumber(s.count)}</strong></td>
+                                    <td>${s.pct}%</td>
+                                    <td>${formatCOP(s.total)}</td>
+                                    <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">Ver ${s.count} pedidos →</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        // Render Productos
+        function renderProductos(stats) {
+            const productosArray = Object.entries(stats.porProducto)
+                .map(([name, data]) => ({ 
+                    name, 
+                    ...data, 
+                    efectividad: data.total > 0 ? (data.entregados / data.total * 100).toFixed(1) : 0,
+                    margen: data.ventas > 0 ? (data.ganancia / data.ventas * 100).toFixed(1) : 0
+                }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 20);
+            
+            return `
+                <div class="charts-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <span class="chart-title">🛍️ Ventas por Producto</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="productosChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">
+                            Top Productos
+                            <span class="table-badge">${productosArray.length} productos</span>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Pedidos</th>
+                                <th>Ventas</th>
+                                <th>Ganancia</th>
+                                <th>Margen</th>
+                                <th>Efectividad</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productosArray.map(p => `
+                                <tr class="clickable" onclick="showProductDetail('${p.name.replace(/'/g, "\\'")}')">
+                                    <td><strong>${p.name.substring(0, 25)}${p.name.length > 25 ? '...' : ''}</strong></td>
+                                    <td>${formatNumber(p.total)}</td>
+                                    <td>${formatCOP(p.ventas)}</td>
+                                    <td style="color:var(--emerald)">${formatCOP(p.ganancia)}</td>
+                                    <td>${p.margen}%</td>
+                                    <td><span class="status-badge ${Number(p.efectividad) >= 80 ? 'entregado' : Number(p.efectividad) >= 70 ? 'transporte' : 'devolucion'}">${p.efectividad}%</span></td>
+                                    <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">Ver pedidos</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        // Render Ciudades
+        function renderCiudades(stats) {
+            const ciudadesArray = Object.entries(stats.porCiudad)
+                .map(([name, data]) => ({
+                    name,
+                    ...data,
+                    efectividad: (data.entregados + data.devoluciones) > 0 
+                        ? (data.entregados / (data.entregados + data.devoluciones) * 100).toFixed(1) 
+                        : 0
+                }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 30);
+            
+            return `
+                <div class="kpi-grid">
+                    <div class="kpi-card emerald">
+                        <div class="kpi-icon">🏆</div>
+                        <div class="kpi-label">Mejor Ciudad</div>
+                        <div class="kpi-value" style="font-size:20px">${ciudadesArray.filter(c => Number(c.efectividad) > 0).sort((a,b) => b.efectividad - a.efectividad)[0]?.name || '-'}</div>
+                        <div class="kpi-subtitle">${ciudadesArray.filter(c => Number(c.efectividad) > 0).sort((a,b) => b.efectividad - a.efectividad)[0]?.efectividad || 0}% efectividad</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-icon">⚠️</div>
+                        <div class="kpi-label">Ciudad Crítica</div>
+                        <div class="kpi-value" style="font-size:20px">${ciudadesArray.filter(c => Number(c.efectividad) > 0 && c.total >= 5).sort((a,b) => a.efectividad - b.efectividad)[0]?.name || '-'}</div>
+                        <div class="kpi-subtitle">${ciudadesArray.filter(c => Number(c.efectividad) > 0 && c.total >= 5).sort((a,b) => a.efectividad - b.efectividad)[0]?.efectividad || 0}% efectividad</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-icon">📍</div>
+                        <div class="kpi-label">Total Ciudades</div>
+                        <div class="kpi-value">${Object.keys(stats.porCiudad).length}</div>
+                    </div>
+                    <div class="kpi-card violet">
+                        <div class="kpi-icon">🏙️</div>
+                        <div class="kpi-label">Mayor Volumen</div>
+                        <div class="kpi-value" style="font-size:20px">${ciudadesArray[0]?.name || '-'}</div>
+                        <div class="kpi-subtitle">${ciudadesArray[0]?.total || 0} pedidos</div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">
+                            Rendimiento por Ciudad
+                            <span class="table-badge">${ciudadesArray.length} ciudades</span>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ciudad</th>
+                                <th>Pedidos</th>
+                                <th>Entregados</th>
+                                <th>Devoluciones</th>
+                                <th>Efectividad</th>
+                                <th>Ingresos</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ciudadesArray.map(c => `
+                                <tr class="clickable" onclick="showCityDetail('${c.name.replace(/'/g, "\\'")}')">
+                                    <td><strong>${c.name}</strong></td>
+                                    <td>${formatNumber(c.total)}</td>
+                                    <td style="color:var(--emerald)">${formatNumber(c.entregados)}</td>
+                                    <td style="color:var(--red)">${formatNumber(c.devoluciones)}</td>
+                                    <td><span class="status-badge ${Number(c.efectividad) >= 80 ? 'entregado' : Number(c.efectividad) >= 70 ? 'transporte' : 'devolucion'}">${c.efectividad}%</span></td>
+                                    <td>${formatCOP(c.ingresos)}</td>
+                                    <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">Ver pedidos</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        // Render Transportadoras
+        function renderTransportadoras(stats) {
+            const transpArray = Object.entries(stats.porTransportadora)
+                .map(([name, data]) => ({
+                    name,
+                    ...data,
+                    efectividad: (data.entregados + data.devoluciones) > 0
+                        ? (data.entregados / (data.entregados + data.devoluciones) * 100).toFixed(1)
+                        : 0
+                }))
+                .sort((a, b) => b.total - a.total);
+            
+            return `
+                <div class="kpi-grid">
+                    ${transpArray.map(t => `
+                        <div class="kpi-card ${Number(t.efectividad) >= 77 ? 'emerald' : Number(t.efectividad) >= 75 ? 'amber' : 'red'} clickable" onclick="showTransportDetail('${t.name}')">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">🚛</div>
+                            </div>
+                            <div class="kpi-label">${t.name}</div>
+                            <div class="kpi-value">${t.efectividad}%</div>
+                            <div class="kpi-subtitle">${formatNumber(t.total)} pedidos • ${formatNumber(t.entregados)} entregados</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <span class="chart-title">📊 Comparativa de Transportadoras</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="transpCompareChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">Detalle por Transportadora</div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Transportadora</th>
+                                <th>Total</th>
+                                <th>Entregados</th>
+                                <th>Devoluciones</th>
+                                <th>Efectividad</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${transpArray.map(t => `
+                                <tr class="clickable" onclick="showTransportDetail('${t.name}')">
+                                    <td><strong>${t.name}</strong></td>
+                                    <td>${formatNumber(t.total)}</td>
+                                    <td style="color:var(--emerald)">${formatNumber(t.entregados)}</td>
+                                    <td style="color:var(--red)">${formatNumber(t.devoluciones)}</td>
+                                    <td><span class="status-badge ${Number(t.efectividad) >= 77 ? 'entregado' : Number(t.efectividad) >= 75 ? 'transporte' : 'devolucion'}">${t.efectividad}%</span></td>
+                                    <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px">Ver ${t.total} pedidos</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        // Render Rentabilidad
+        function renderRentabilidad(stats) {
+            const ventasTotales = filteredData.reduce((sum, o) => sum + o.total, 0);
+            const costoProducto = filteredData.reduce((sum, o) => sum + o.costoProveedor, 0);
+            const costoFlete = filteredData.reduce((sum, o) => sum + o.flete, 0);
+            const costoDevolucion = filteredData.filter(o => ['DEVOLUCION', 'CANCELADO'].includes(o.estatus)).reduce((sum, o) => sum + o.costoDevolucion + o.flete, 0);
+            
+            return `
+                <div class="kpi-grid">
+                    <div class="kpi-card blue">
+                        <div class="kpi-icon">💵</div>
+                        <div class="kpi-label">Ingresos Totales</div>
+                        <div class="kpi-value">${formatCOP(ventasTotales)}</div>
+                        <div class="kpi-subtitle">Todas las órdenes</div>
+                    </div>
+                    <div class="kpi-card emerald">
+                        <div class="kpi-icon">✅</div>
+                        <div class="kpi-label">Ventas Efectivas</div>
+                        <div class="kpi-value">${formatCOP(stats.ventasEfectivas)}</div>
+                        <div class="kpi-subtitle">Solo entregados</div>
+                    </div>
+                    <div class="kpi-card violet">
+                        <div class="kpi-icon">📈</div>
+                        <div class="kpi-label">Ganancia Bruta</div>
+                        <div class="kpi-value">${formatCOP(stats.gananciaTotal)}</div>
+                        <div class="kpi-subtitle">Margen: ${stats.margen}%</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-icon">💸</div>
+                        <div class="kpi-label">Pérdida por Devoluciones</div>
+                        <div class="kpi-value">${formatCOP(costoDevolucion)}</div>
+                        <div class="kpi-subtitle">${stats.devoluciones} devoluciones</div>
+                    </div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">💰 Distribución de Costos</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="costosChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">📊 Ingresos vs Ganancia</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="ingresosChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">📋 Desglose Financiero</div>
+                    </div>
+                    <table class="data-table">
+                        <tbody>
+                            <tr>
+                                <td><strong>Ingresos Totales</strong></td>
+                                <td style="text-align:right"><strong style="color:var(--blue)">${formatCOP(ventasTotales)}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>(-) Costo de Productos</td>
+                                <td style="text-align:right;color:var(--text-muted)">- ${formatCOP(costoProducto)}</td>
+                            </tr>
+                            <tr>
+                                <td>(-) Costo de Fletes</td>
+                                <td style="text-align:right;color:var(--text-muted)">- ${formatCOP(costoFlete)}</td>
+                            </tr>
+                            <tr>
+                                <td>(-) Pérdida por Devoluciones</td>
+                                <td style="text-align:right;color:var(--red)">- ${formatCOP(costoDevolucion)}</td>
+                            </tr>
+                            <tr style="background:var(--emerald-bg)">
+                                <td><strong>= Ganancia Estimada</strong></td>
+                                <td style="text-align:right"><strong style="color:var(--emerald);font-size:18px">${formatCOP(stats.gananciaTotal)}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>ROI Aproximado</td>
+                                <td style="text-align:right"><strong style="color:var(--violet)">${((stats.gananciaTotal / (costoProducto + costoFlete)) * 100).toFixed(1)}%</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        // Helper functions
+        function getStatusClass(status) {
+            if (status === 'ENTREGADO') return 'entregado';
+            if (['DEVOLUCION', 'CANCELADO'].includes(status)) return 'devolucion';
+            if (status.includes('TRANSPORTE') || status.includes('REPARTO')) return 'transporte';
+            if (status.includes('NOVEDAD')) return 'novedad';
+            return 'proceso';
+        }
+        
+        function generatePaginationButtons(current, total) {
+            let buttons = '';
+            const range = 2;
+            
+            for (let i = Math.max(1, current - range); i <= Math.min(total, current + range); i++) {
+                buttons += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            
+            return buttons;
+        }
+        
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderContent();
+        }
+        
+        // Search table
+        function searchTable(query) {
+            if (!dropiData) return;
+            
+            query = query.toLowerCase();
+            filteredData = dropiData.orders.filter(o => 
+                (o.cliente || '').toLowerCase().includes(query) ||
+                (o.orderId + '').toLowerCase().includes(query) ||
+                (o.ciudad || '').toLowerCase().includes(query) ||
+                (o.producto || '').toLowerCase().includes(query) ||
+                (o.telefono + '').includes(query)
+            );
+            
+            currentPage = 1;
+            renderContent();
+        }
+        
+        // Sort table
+        let sortColumn = '';
+        let sortAsc = true;
+        
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortAsc = !sortAsc;
+            } else {
+                sortColumn = column;
+                sortAsc = true;
+            }
+            
+            filteredData.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+                
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+            
+            renderContent();
+        }
+        
+        // Modal functions
+        function showOrderDetail(id) {
+            const order = filteredData.find(o => o.id === id);
+            if (!order) return;
+            
+            document.getElementById('modalTitle').innerHTML = `📦 Pedido #${order.orderId}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div>
+                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">INFORMACIÓN DEL PEDIDO</h4>
+                        <p><strong>ID:</strong> ${order.orderId}</p>
+                        <p><strong>Fecha:</strong> ${order.fechaStr}</p>
+                        <p><strong>Estatus:</strong> <span class="status-badge ${getStatusClass(order.estatus)}">${order.estatus}</span></p>
+                        <p><strong>Guía:</strong> ${order.guia || '-'}</p>
+                        <p><strong>Último Movimiento:</strong> ${order.ultimoMovimiento || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">CLIENTE</h4>
+                        <p><strong>Nombre:</strong> ${order.cliente || '-'}</p>
+                        <p><strong>Teléfono:</strong> ${order.telefono || '-'}</p>
+                        <p><strong>Email:</strong> ${order.email || '-'}</p>
+                        <p><strong>Ciudad:</strong> ${order.ciudad || '-'}</p>
+                        <p><strong>Dirección:</strong> ${order.direccion || '-'}</p>
+                    </div>
+                </div>
+                <hr style="border-color:var(--border);margin:20px 0">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div>
+                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">PRODUCTO</h4>
+                        <p><strong>Producto:</strong> ${order.producto || '-'}</p>
+                        <p><strong>Variación:</strong> ${order.variacion || '-'}</p>
+                        <p><strong>Cantidad:</strong> ${order.cantidad}</p>
+                        <p><strong>Transportadora:</strong> ${order.transportadora || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 style="color:var(--text-muted);font-size:12px;margin-bottom:15px">FINANCIERO</h4>
+                        <p><strong>Total:</strong> <span style="color:var(--blue)">${formatCOP(order.total)}</span></p>
+                        <p><strong>Ganancia:</strong> <span style="color:var(--emerald)">${formatCOP(order.ganancia)}</span></p>
+                        <p><strong>Flete:</strong> ${formatCOP(order.flete)}</p>
+                        <p><strong>Costo Proveedor:</strong> ${formatCOP(order.costoProveedor)}</p>
+                    </div>
+                </div>
+                ${order.novedad ? `
+                    <hr style="border-color:var(--border);margin:20px 0">
+                    <div style="background:var(--amber-bg);padding:15px;border-radius:10px">
+                        <h4 style="color:var(--amber);font-size:12px;margin-bottom:10px">⚠️ NOVEDAD</h4>
+                        <p><strong>Novedad:</strong> ${order.novedad}</p>
+                        <p><strong>Solución:</strong> ${order.solucionNovedad || 'Pendiente'}</p>
+                    </div>
+                ` : ''}
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+        
+        function showStatusDetail(status) {
+            const orders = filteredData.filter(o => o.estatus === status);
+            
+            document.getElementById('modalTitle').innerHTML = `<span class="status-badge ${getStatusClass(status)}">${status}</span> ${orders.length} pedidos`;
+            document.getElementById('modalBody').innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Ciudad</th>
+                            <th>Producto</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orders.slice(0, 100).map(o => `
+                            <tr>
+                                <td><strong>${o.orderId}</strong></td>
+                                <td>${o.fechaStr}</td>
+                                <td>${o.cliente || '-'}</td>
+                                <td>${o.ciudad || '-'}</td>
+                                <td>${(o.producto || '').substring(0, 20)}</td>
+                                <td>${formatCOP(o.total)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${orders.length > 100 ? `<p style="text-align:center;color:var(--text-muted);margin-top:15px">Mostrando 100 de ${orders.length} pedidos</p>` : ''}
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+        
+        function showProductDetail(product) {
+            const orders = filteredData.filter(o => o.producto === product);
+            const stats = {
+                total: orders.length,
+                ventas: orders.reduce((s, o) => s + o.total, 0),
+                ganancia: orders.reduce((s, o) => s + o.ganancia, 0),
+                entregados: orders.filter(o => o.estatus === 'ENTREGADO').length
+            };
+            
+            document.getElementById('modalTitle').innerHTML = `🛍️ ${product}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="kpi-grid" style="margin-bottom:20px">
+                    <div class="kpi-card blue" style="padding:15px">
+                        <div class="kpi-label">Pedidos</div>
+                        <div class="kpi-value" style="font-size:20px">${stats.total}</div>
+                    </div>
+                    <div class="kpi-card emerald" style="padding:15px">
+                        <div class="kpi-label">Ventas</div>
+                        <div class="kpi-value" style="font-size:20px">${formatCOP(stats.ventas)}</div>
+                    </div>
+                    <div class="kpi-card violet" style="padding:15px">
+                        <div class="kpi-label">Ganancia</div>
+                        <div class="kpi-value" style="font-size:20px">${formatCOP(stats.ganancia)}</div>
+                    </div>
+                    <div class="kpi-card amber" style="padding:15px">
+                        <div class="kpi-label">Efectividad</div>
+                        <div class="kpi-value" style="font-size:20px">${(stats.entregados / stats.total * 100).toFixed(1)}%</div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Ciudad</th>
+                            <th>Estatus</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orders.slice(0, 50).map(o => `
+                            <tr>
+                                <td>${o.orderId}</td>
+                                <td>${o.fechaStr}</td>
+                                <td>${o.cliente || '-'}</td>
+                                <td>${o.ciudad || '-'}</td>
+                                <td><span class="status-badge ${getStatusClass(o.estatus)}">${o.estatus}</span></td>
+                                <td>${formatCOP(o.total)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+        
+        function showCityDetail(city) {
+            const orders = filteredData.filter(o => o.ciudad === city);
+            showGenericDetail(`📍 ${city}`, orders);
+        }
+        
+        function showTransportDetail(transport) {
+            const orders = filteredData.filter(o => o.transportadora === transport);
+            showGenericDetail(`🚛 ${transport}`, orders);
+        }
+        
+        function showGenericDetail(title, orders) {
+            const stats = {
+                total: orders.length,
+                entregados: orders.filter(o => o.estatus === 'ENTREGADO').length,
+                devoluciones: orders.filter(o => ['DEVOLUCION', 'CANCELADO'].includes(o.estatus)).length,
+                ingresos: orders.reduce((s, o) => s + o.total, 0)
+            };
+            const efectividad = (stats.entregados + stats.devoluciones) > 0 
+                ? (stats.entregados / (stats.entregados + stats.devoluciones) * 100).toFixed(1) 
+                : 0;
+            
+            document.getElementById('modalTitle').innerHTML = title;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="kpi-grid" style="margin-bottom:20px">
+                    <div class="kpi-card blue" style="padding:15px">
+                        <div class="kpi-label">Total</div>
+                        <div class="kpi-value" style="font-size:20px">${stats.total}</div>
+                    </div>
+                    <div class="kpi-card emerald" style="padding:15px">
+                        <div class="kpi-label">Entregados</div>
+                        <div class="kpi-value" style="font-size:20px">${stats.entregados}</div>
+                    </div>
+                    <div class="kpi-card red" style="padding:15px">
+                        <div class="kpi-label">Devoluciones</div>
+                        <div class="kpi-value" style="font-size:20px">${stats.devoluciones}</div>
+                    </div>
+                    <div class="kpi-card ${Number(efectividad) >= 75 ? 'emerald' : 'amber'}" style="padding:15px">
+                        <div class="kpi-label">Efectividad</div>
+                        <div class="kpi-value" style="font-size:20px">${efectividad}%</div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Producto</th>
+                            <th>Estatus</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orders.slice(0, 50).map(o => `
+                            <tr>
+                                <td>${o.orderId}</td>
+                                <td>${o.fechaStr}</td>
+                                <td>${o.cliente || '-'}</td>
+                                <td>${(o.producto || '').substring(0, 20)}</td>
+                                <td><span class="status-badge ${getStatusClass(o.estatus)}">${o.estatus}</span></td>
+                                <td>${formatCOP(o.total)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${orders.length > 50 ? `<p style="text-align:center;color:var(--text-muted);margin-top:15px">Mostrando 50 de ${orders.length} pedidos</p>` : ''}
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+        
+        function closeModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+        
+        // Initialize charts
+        function initCharts(stats) {
+            // Destroy existing charts
+            Object.values(charts).forEach(c => c && c.destroy());
+            charts = {};
+            
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        labels: { color: '#9ca3af', font: { size: 11 } }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } }
+                }
+            };
+            
+            // Status chart
+            const statusCtx = document.getElementById('statusChart');
+            if (statusCtx) {
+                const statusData = Object.entries(stats.porEstatus).sort((a, b) => b[1].count - a[1].count).slice(0, 6);
+                charts.status = new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: statusData.map(s => s[0]),
+                        datasets: [{
+                            data: statusData.map(s => s[1].count),
+                            backgroundColor: ['#10B981', '#EF4444', '#F59E0B', '#3B82F6', '#8B5CF6', '#EC4899']
+                        }]
+                    },
+                    options: { ...chartOptions, scales: {} }
+                });
+            }
+            
+            // Transport chart
+            const transportCtx = document.getElementById('transportChart');
+            if (transportCtx) {
+                const transpData = Object.entries(stats.porTransportadora).map(([name, data]) => ({
+                    name,
+                    efectividad: (data.entregados + data.devoluciones) > 0 ? (data.entregados / (data.entregados + data.devoluciones) * 100) : 0
+                }));
+                charts.transport = new Chart(transportCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: transpData.map(t => t.name),
+                        datasets: [{
+                            label: 'Efectividad %',
+                            data: transpData.map(t => t.efectividad.toFixed(1)),
+                            backgroundColor: transpData.map(t => t.efectividad >= 77 ? '#10B981' : t.efectividad >= 75 ? '#F59E0B' : '#EF4444'),
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { ...chartOptions, indexAxis: 'y', plugins: { legend: { display: false } } }
+                });
+            }
+            
+            // Cities chart
+            const citiesCtx = document.getElementById('citiesChart');
+            if (citiesCtx) {
+                const citiesData = Object.entries(stats.porCiudad).sort((a, b) => b[1].total - a[1].total).slice(0, 10);
+                charts.cities = new Chart(citiesCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: citiesData.map(c => c[0]),
+                        datasets: [{
+                            label: 'Pedidos',
+                            data: citiesData.map(c => c[1].total),
+                            backgroundColor: '#3B82F6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: chartOptions
+                });
+            }
+            
+            // Products chart
+            const productosCtx = document.getElementById('productosChart');
+            if (productosCtx) {
+                const prodData = Object.entries(stats.porProducto).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
+                charts.productos = new Chart(productosCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: prodData.map(p => p[0].substring(0, 15)),
+                        datasets: [{
+                            label: 'Pedidos',
+                            data: prodData.map(p => p[1].total),
+                            backgroundColor: '#8B5CF6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: chartOptions
+                });
+            }
+            
+            // Transport compare chart
+            const transpCompareCtx = document.getElementById('transpCompareChart');
+            if (transpCompareCtx) {
+                const transpData = Object.entries(stats.porTransportadora);
+                charts.transpCompare = new Chart(transpCompareCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: transpData.map(t => t[0]),
+                        datasets: [
+                            {
+                                label: 'Entregados',
+                                data: transpData.map(t => t[1].entregados),
+                                backgroundColor: '#10B981',
+                                borderRadius: 6
+                            },
+                            {
+                                label: 'Devoluciones',
+                                data: transpData.map(t => t[1].devoluciones),
+                                backgroundColor: '#EF4444',
+                                borderRadius: 6
+                            }
+                        ]
+                    },
+                    options: chartOptions
+                });
+            }
+            
+            // Costos chart
+            const costosCtx = document.getElementById('costosChart');
+            if (costosCtx) {
+                const costoProducto = filteredData.reduce((sum, o) => sum + o.costoProveedor, 0);
+                const costoFlete = filteredData.reduce((sum, o) => sum + o.flete, 0);
+                const ganancia = stats.gananciaTotal;
+                
+                charts.costos = new Chart(costosCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Costo Producto', 'Costo Flete', 'Ganancia'],
+                        datasets: [{
+                            data: [costoProducto, costoFlete, ganancia],
+                            backgroundColor: ['#EF4444', '#F59E0B', '#10B981']
+                        }]
+                    },
+                    options: { ...chartOptions, scales: {} }
+                });
+            }
+            
+            // Ingresos chart
+            const ingresosCtx = document.getElementById('ingresosChart');
+            if (ingresosCtx) {
+                charts.ingresos = new Chart(ingresosCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Ingresos', 'Ventas Efectivas', 'Ganancia'],
+                        datasets: [{
+                            data: [
+                                filteredData.reduce((s, o) => s + o.total, 0),
+                                stats.ventasEfectivas,
+                                stats.gananciaTotal
+                            ],
+                            backgroundColor: ['#3B82F6', '#8B5CF6', '#10B981'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { ...chartOptions, plugins: { legend: { display: false } } }
+                });
+            }
+        }
+        
+        // Export PDF
+        function exportPDF() {
+            const element = document.getElementById('content');
+            const opt = {
+                margin: 10,
+                filename: `Dashboard_Dropshipping_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, backgroundColor: '#0f0f14' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+        }
+        
+        function exportModalPDF() {
+            const element = document.querySelector('.modal');
+            const opt = {
+                margin: 10,
+                filename: `Detalle_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, backgroundColor: '#1a1a24' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+        }
+        
+        function refreshData() {
+            if (dropiData) {
+                filteredData = [...dropiData.orders];
+                clearFilters();
+            }
+        }
+    </script>
+</body>
+</html>
