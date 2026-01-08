@@ -547,7 +547,7 @@
             z-index: 1000;
             padding: 20px;
         }
-        .modal-overlay.active { display: flex; }
+        .modal-overlay.open { display: flex; }
         .modal {
             background: var(--bg-secondary);
             border-radius: 20px;
@@ -2593,7 +2593,7 @@
                     </tbody>
                 </table>
             `;
-            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('modalOverlay').classList.add('open');
         }
 
         // Search novedades by field
@@ -3261,7 +3261,7 @@
                     </div>
                 ` : ''}
             `;
-            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('modalOverlay').classList.add('open');
         }
         
         function showStatusDetail(status) {
@@ -3305,7 +3305,7 @@
                 </div>
                 ${orders.length > 100 ? `<p style="text-align:center;color:var(--text-muted);margin-top:15px">Mostrando 100 de ${orders.length} pedidos</p>` : ''}
             `;
-            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('modalOverlay').classList.add('open');
         }
 
         function filterModalTable(query, field) {
@@ -3417,7 +3417,7 @@
                     </table>
                 </div>
             `;
-            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('modalOverlay').classList.add('open');
         }
         
         function showCityDetail(city) {
@@ -3487,12 +3487,12 @@
                 </table>
                 ${orders.length > 50 ? `<p style="text-align:center;color:var(--text-muted);margin-top:15px">Mostrando 50 de ${orders.length} pedidos</p>` : ''}
             `;
-            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('modalOverlay').classList.add('open');
         }
         
         function closeModal(e) {
             if (e && e.target !== e.currentTarget) return;
-            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('modalOverlay').classList.remove('open');
         }
 
         // Toggle mobile menu
