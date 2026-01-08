@@ -1058,9 +1058,11 @@
             
             <!-- Filters -->
             <div class="filters-bar" id="filtersBar">
-                <div class="filter-group" style="flex:1;min-width:250px;">
-                    <label>🔍 Buscar (Cliente, Guía, ID)</label>
-                    <input type="text" id="filterSearch" placeholder="Buscar por cliente, N° guía o ID..." oninput="searchTable(this.value)">
+                <div class="filter-group" id="searchFilterGroup" style="flex:1;min-width:250px;">
+                    <label>🔍 Buscar (Cliente, Guía, Teléfono)</label>
+                    <input type="text" id="filterSearch" placeholder="Buscar por cliente, N° guía o teléfono..."
+                           oninput="searchTable(this.value)"
+                           onkeydown="if(event.key==='Enter'){searchTable(this.value);event.preventDefault();}">
                 </div>
                 <div class="filter-group">
                     <label>Fecha Inicio</label>
@@ -1395,6 +1397,9 @@
         // Setup drag and drop after DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             setupDropzone();
+            // Ocultar buscador en inicio (tab resumen)
+            const searchGroup = document.getElementById('searchFilterGroup');
+            if (searchGroup) searchGroup.style.display = 'none';
         });
 
         function setupDropzone() {
@@ -1797,6 +1802,13 @@
             const titleData = titles[tab] || ['Dashboard', 'Vista general'];
             document.getElementById('pageTitle').textContent = titleData[0];
             document.getElementById('pageSubtitle').textContent = titleData[1];
+
+            // Solo mostrar buscador en Pedidos y Novedades
+            const searchGroup = document.getElementById('searchFilterGroup');
+            if (searchGroup) {
+                const showSearch = ['pedidos', 'novedades'].includes(tab);
+                searchGroup.style.display = showSearch ? '' : 'none';
+            }
 
             renderContent();
         }
@@ -3430,19 +3442,41 @@
         function searchTable(query) {
             if (!dropiData) return;
 
-            query = query.toLowerCase().trim();
+            query = query.trim();
             if (!query) {
                 filteredData = [...dropiData.orders];
             } else {
-                filteredData = dropiData.orders.filter(o =>
-                    (o.cliente || '').toLowerCase().includes(query) ||
-                    (o.orderId + '').toLowerCase().includes(query) ||
-                    (o.ciudad || '').toLowerCase().includes(query) ||
-                    (o.producto || '').toLowerCase().includes(query) ||
-                    (o.telefono + '').toLowerCase().includes(query) ||
-                    (o.guia || '').toLowerCase().includes(query) ||
-                    (o.estatus || '').toLowerCase().includes(query)
-                );
+                const queryLower = query.toLowerCase();
+                // Normalizar query para búsqueda de teléfono (quitar espacios y guiones)
+                const queryPhone = query.replace(/[\s\-\(\)]/g, '');
+
+                filteredData = dropiData.orders.filter(o => {
+                    // Búsqueda por cliente (nombre)
+                    const cliente = (o.cliente || '').toLowerCase();
+                    if (cliente.includes(queryLower)) return true;
+
+                    // Búsqueda por guía (exacta o parcial)
+                    const guia = (o.guia || '').toString();
+                    if (guia.includes(query) || guia.toLowerCase().includes(queryLower)) return true;
+
+                    // Búsqueda por teléfono (normalizado)
+                    const telefono = (o.telefono || '').toString().replace(/[\s\-\(\)]/g, '');
+                    if (telefono.includes(queryPhone)) return true;
+
+                    // Búsqueda por ID de orden
+                    const orderId = (o.orderId || '').toString();
+                    if (orderId.includes(query)) return true;
+
+                    // Búsqueda por ciudad
+                    const ciudad = (o.ciudad || '').toLowerCase();
+                    if (ciudad.includes(queryLower)) return true;
+
+                    // Búsqueda por producto
+                    const producto = (o.producto || '').toLowerCase();
+                    if (producto.includes(queryLower)) return true;
+
+                    return false;
+                });
             }
 
             currentPage = 1;
