@@ -739,6 +739,9 @@
                     <li class="nav-item" onclick="showTab('estatus')">
                         <span class="icon">🚚</span> Por Estatus
                     </li>
+                    <li class="nav-item" onclick="showTab('novedades')">
+                        <span class="icon">⚠️</span> Novedades
+                    </li>
                     <li class="nav-item" onclick="showTab('productos')">
                         <span class="icon">🛍️</span> Productos
                     </li>
@@ -747,6 +750,9 @@
                     </li>
                     <li class="nav-item" onclick="showTab('transportadoras')">
                         <span class="icon">🚛</span> Transportadoras
+                    </li>
+                    <li class="nav-item" onclick="showTab('ganancias')">
+                        <span class="icon">💵</span> Ganancias
                     </li>
                     <li class="nav-item" onclick="showTab('rentabilidad')">
                         <span class="icon">💰</span> Rentabilidad
@@ -1167,7 +1173,7 @@
                     fecha: fecha,
                     fechaStr: row['FECHA'] || '',
                     cliente: row['NOMBRE CLIENTE'] || '',
-                    telefono: row['TELÉFONO'] || '',
+                    telefono: row['TELÉFONO'] || row['TELEFONO'] || '',
                     email: row['EMAIL'] || '',
                     estatus: row['ESTATUS'] || '',
                     ciudad: row['CIUDAD DESTINO'] || '',
@@ -1179,13 +1185,26 @@
                     flete: Number(row['PRECIO FLETE']) || 0,
                     costoDevolucion: Number(row['COSTO DEVOLUCION FLETE']) || 0,
                     costoProveedor: Number(row['PRECIO PROVEEDOR X CANTIDAD']) || 0,
+                    comision: Number(row['COMISION']) || Number(row['COMISIÓN']) || 0,
                     producto: row['PRODUCTO'] || '',
-                    variacion: row['VARIACION'] || '',
+                    variacion: row['VARIACION'] || row['VARIACIÓN'] || '',
                     cantidad: Number(row['CANTIDAD']) || 1,
+                    guia: row['NÚMERO GUIA'] || row['NUMERO GUIA'] || '',
+                    // Campos de Novedad
                     novedad: row['NOVEDAD'] || '',
-                    solucionNovedad: row['SOLUCIÓN'] || '',
-                    ultimoMovimiento: row['ÚLTIMO MOVIMIENTO'] || '',
-                    guia: row['NÚMERO GUIA'] || ''
+                    novedadSolucionada: row['FUE SOLUCIONADA LA NOVEDAD'] || '',
+                    horaNovedad: row['HORA DE NOVEDAD'] || '',
+                    fechaNovedad: row['FECHA DE NOVEDAD'] || '',
+                    solucionNovedad: row['SOLUCIÓN'] || row['SOLUCION'] || '',
+                    horaSolucion: row['HORA DE SOLUCIÓN'] || row['HORA DE SOLUCION'] || '',
+                    fechaSolucion: row['FECHA DE SOLUCIÓN'] || row['FECHA DE SOLUCION'] || '',
+                    observacion: row['OBSERVACIÓN'] || row['OBSERVACION'] || '',
+                    // Campos de Último Movimiento
+                    horaUltimoMovimiento: row['HORA DE ÚLTIMO MOVIMIENTO'] || row['HORA DE ULTIMO MOVIMIENTO'] || '',
+                    fechaUltimoMovimiento: row['FECHA DE ÚLTIMO MOVIMIENTO'] || row['FECHA DE ULTIMO MOVIMIENTO'] || '',
+                    ultimoMovimiento: row['ÚLTIMO MOVIMIENTO'] || row['ULTIMO MOVIMIENTO'] || '',
+                    conceptoUltimoMovimiento: row['CONCEPTO ÚLTIMO MOVIMIENTO'] || row['CONCEPTO ULTIMO MOVIMIENTO'] || '',
+                    ubicacionUltimoMovimiento: row['UBICACIÓN DE ÚLTIMO MOVIMIENTO'] || row['UBICACION DE ULTIMO MOVIMIENTO'] || ''
                 };
             });
             
@@ -1407,9 +1426,11 @@
                 resumen: ['Resumen General', 'Vista general de tu negocio'],
                 pedidos: ['Detalle de Pedidos', 'Lista completa de todos los pedidos'],
                 estatus: ['Análisis por Estatus', 'Desglose por estado de los pedidos'],
+                novedades: ['Novedades', 'Pedidos con novedades y su seguimiento'],
                 productos: ['Análisis de Productos', 'Rendimiento por producto'],
                 ciudades: ['Análisis por Ciudad', 'Rendimiento por ubicación'],
                 transportadoras: ['Transportadoras', 'Efectividad por transportadora'],
+                ganancias: ['Ganancias', 'Análisis de ganancias por período'],
                 rentabilidad: ['Rentabilidad', 'Análisis financiero detallado']
             };
 
@@ -1448,6 +1469,9 @@
                 case 'estatus':
                     html = renderEstatus(stats);
                     break;
+                case 'novedades':
+                    html = renderNovedades(stats);
+                    break;
                 case 'productos':
                     html = renderProductos(stats);
                     break;
@@ -1457,6 +1481,9 @@
                 case 'transportadoras':
                     html = renderTransportadoras(stats);
                     break;
+                case 'ganancias':
+                    html = renderGanancias(stats);
+                    break;
                 case 'rentabilidad':
                     html = renderRentabilidad(stats);
                     break;
@@ -1465,7 +1492,12 @@
             document.getElementById('content').innerHTML = html;
 
             // Initialize charts after DOM update
-            setTimeout(() => initCharts(stats), 100);
+            setTimeout(() => {
+                initCharts(stats);
+                if (currentTab === 'ganancias') {
+                    initGananciasCharts();
+                }
+            }, 100);
         }
         
         function formatCOP(value) {
@@ -1591,21 +1623,27 @@
             const endIdx = startIdx + itemsPerPage;
             const pageData = filteredData.slice(startIdx, endIdx);
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            
+
             return `
                 <div class="table-container">
-                    <div class="table-header">
+                    <div class="table-header" style="flex-wrap:wrap;gap:10px;">
                         <div class="table-title">
                             Todos los Pedidos
                             <span class="table-badge">${formatNumber(filteredData.length)} registros</span>
                         </div>
-                        <input type="text" class="table-search" placeholder="🔍 Buscar por cliente, ID, ciudad..." oninput="searchTable(this.value)">
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <input type="text" class="table-search" id="searchGeneral" placeholder="🔍 Buscar general..." oninput="searchTable(this.value)" style="min-width:180px;">
+                            <input type="text" class="table-search" id="searchGuia" placeholder="🔍 Buscar por Guía..." oninput="searchByField('guia', this.value)" style="min-width:150px;">
+                            <input type="text" class="table-search" id="searchTelefono" placeholder="📱 Buscar por Teléfono..." oninput="searchByField('telefono', this.value)" style="min-width:150px;">
+                        </div>
                     </div>
                     <div style="overflow-x: auto;">
                         <table class="data-table" id="ordersTable">
                             <thead>
                                 <tr>
                                     <th onclick="sortTable('orderId')">ID ↕</th>
+                                    <th onclick="sortTable('guia')">N° Guía ↕</th>
+                                    <th onclick="sortTable('telefono')">Teléfono ↕</th>
                                     <th onclick="sortTable('fechaStr')">Fecha ↕</th>
                                     <th onclick="sortTable('cliente')">Cliente ↕</th>
                                     <th onclick="sortTable('ciudad')">Ciudad ↕</th>
@@ -1619,6 +1657,8 @@
                                 ${pageData.map(o => `
                                     <tr class="clickable" ondblclick="showOrderDetail(${o.id})">
                                         <td><strong>${o.orderId}</strong></td>
+                                        <td style="font-family:monospace;font-size:12px;">${o.guia || '-'}</td>
+                                        <td style="font-family:monospace;">${o.telefono || '-'}</td>
                                         <td>${o.fechaStr}</td>
                                         <td>${o.cliente || '-'}</td>
                                         <td>${o.ciudad || '-'}</td>
@@ -1647,11 +1687,32 @@
         
         // Render Estatus
         function renderEstatus(stats) {
+            // Orden de importancia de los estatus
+            const ordenEstatus = [
+                'EN TRANSPORTE', 'GUIA_GENERADA', 'EN REPARTO', 'EN PROCESAMIENTO',
+                'RECLAME EN OFICINA', 'DESPACHADA', 'ENTREGADO', 'EN BODEGA TRANSPORTADORA',
+                'EN TERMINAL DESTINO', 'EN BODEGA DESTINO', 'DEVOLUCION', 'NOVEDAD',
+                'PREPARADO PARA TRANSPORTADORA', 'NOVEDAD SOLUCIONADA', 'INTENTO DE ENTREGA',
+                'TELEMERCADEO', 'CANCELADO', 'EN PUNTO DROOP', 'PENDIENTE',
+                'EN TERMINAL ORIGEN', 'EN ESPERA DE RUTA DOMESTICA', 'ADMITIDA'
+            ];
+
             const estatusArray = Object.entries(stats.porEstatus)
                 .map(([name, data]) => ({ name, ...data, pct: (data.count / stats.total * 100).toFixed(1) }))
-                .sort((a, b) => b.count - a.count);
-            
+                .sort((a, b) => {
+                    const idxA = ordenEstatus.indexOf(a.name);
+                    const idxB = ordenEstatus.indexOf(b.name);
+                    if (idxA === -1 && idxB === -1) return b.count - a.count;
+                    if (idxA === -1) return 1;
+                    if (idxB === -1) return -1;
+                    return idxA - idxB;
+                });
+
             return `
+                <div style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <input type="text" class="table-search" id="searchEstatusGuia" placeholder="🔍 Buscar por N° Guía..." oninput="searchByFieldAndRender('guia', this.value, 'estatus')" style="min-width:180px;">
+                    <input type="text" class="table-search" id="searchEstatusTelefono" placeholder="📱 Buscar por Teléfono..." oninput="searchByFieldAndRender('telefono', this.value, 'estatus')" style="min-width:180px;">
+                </div>
                 <div class="status-summary">
                     ${estatusArray.map(s => `
                         <div class="status-card clickable" onclick="showStatusDetail('${s.name}')">
@@ -1663,7 +1724,7 @@
                         </div>
                     `).join('')}
                 </div>
-                
+
                 <div class="table-container">
                     <div class="table-header">
                         <div class="table-title">
@@ -1994,6 +2055,471 @@
             `;
         }
 
+        // Render Novedades
+        function renderNovedades(stats) {
+            const pedidosConNovedad = filteredData.filter(o => o.novedad && o.novedad.trim() !== '');
+            const novedadesSolucionadas = pedidosConNovedad.filter(o => o.novedadSolucionada && o.novedadSolucionada.toLowerCase().includes('si'));
+            const novedadesPendientes = pedidosConNovedad.filter(o => !o.novedadSolucionada || !o.novedadSolucionada.toLowerCase().includes('si'));
+
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageData = pedidosConNovedad.slice(startIdx, endIdx);
+            const totalPages = Math.ceil(pedidosConNovedad.length / itemsPerPage);
+
+            return `
+                <div class="kpi-grid">
+                    <div class="kpi-card amber">
+                        <div class="kpi-icon">⚠️</div>
+                        <div class="kpi-label">Total Novedades</div>
+                        <div class="kpi-value">${formatNumber(pedidosConNovedad.length)}</div>
+                        <div class="kpi-subtitle">${(pedidosConNovedad.length / filteredData.length * 100).toFixed(1)}% de los pedidos</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-icon">🔴</div>
+                        <div class="kpi-label">Pendientes</div>
+                        <div class="kpi-value">${formatNumber(novedadesPendientes.length)}</div>
+                        <div class="kpi-subtitle">Requieren atención</div>
+                    </div>
+                    <div class="kpi-card emerald">
+                        <div class="kpi-icon">✅</div>
+                        <div class="kpi-label">Solucionadas</div>
+                        <div class="kpi-value">${formatNumber(novedadesSolucionadas.length)}</div>
+                        <div class="kpi-subtitle">${pedidosConNovedad.length > 0 ? (novedadesSolucionadas.length / pedidosConNovedad.length * 100).toFixed(1) : 0}% resueltas</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-icon">💰</div>
+                        <div class="kpi-label">Valor en Riesgo</div>
+                        <div class="kpi-value">${formatCOP(novedadesPendientes.reduce((s,o) => s + o.total, 0))}</div>
+                        <div class="kpi-subtitle">Pedidos con novedad pendiente</div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header" style="flex-wrap:wrap;gap:10px;">
+                        <div class="table-title">
+                            Pedidos con Novedades
+                            <span class="table-badge">${formatNumber(pedidosConNovedad.length)} registros</span>
+                        </div>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <input type="text" class="table-search" placeholder="🔍 Buscar por Guía..." oninput="searchNovedadesByField('guia', this.value)" style="min-width:150px;">
+                            <input type="text" class="table-search" placeholder="📱 Buscar por Teléfono..." oninput="searchNovedadesByField('telefono', this.value)" style="min-width:150px;">
+                            <select class="table-search" onchange="filterNovedadesPorEstado(this.value)" style="min-width:150px;">
+                                <option value="">Todos los estados</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="solucionada">Solucionadas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="novedadesTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>N° Guía</th>
+                                    <th>Teléfono</th>
+                                    <th>Cliente</th>
+                                    <th>Novedad</th>
+                                    <th>Solucionada</th>
+                                    <th>Fecha Novedad</th>
+                                    <th>Solución</th>
+                                    <th>Último Mov.</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pageData.map(o => `
+                                    <tr class="${o.novedadSolucionada && o.novedadSolucionada.toLowerCase().includes('si') ? '' : 'novedad-pendiente'}">
+                                        <td><strong>${o.orderId}</strong></td>
+                                        <td style="font-family:monospace;font-size:11px;">${o.guia || '-'}</td>
+                                        <td style="font-family:monospace;">${o.telefono || '-'}</td>
+                                        <td>${o.cliente || '-'}</td>
+                                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;" title="${o.novedad}">${(o.novedad || '').substring(0, 30)}${(o.novedad || '').length > 30 ? '...' : ''}</td>
+                                        <td><span class="status-badge ${o.novedadSolucionada && o.novedadSolucionada.toLowerCase().includes('si') ? 'entregado' : 'devolucion'}">${o.novedadSolucionada || 'NO'}</span></td>
+                                        <td>${o.fechaNovedad || '-'}</td>
+                                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${o.solucionNovedad}">${(o.solucionNovedad || '-').substring(0, 20)}</td>
+                                        <td style="font-size:11px;">${o.ultimoMovimiento || '-'}</td>
+                                        <td><button class="btn btn-secondary" style="padding:6px 10px;font-size:11px" onclick="showNovedadDetail(${o.id})">Ver</button></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${pedidosConNovedad.length > itemsPerPage ? `
+                    <div class="pagination">
+                        <span class="pagination-info">Mostrando ${startIdx + 1}-${Math.min(endIdx, pedidosConNovedad.length)} de ${formatNumber(pedidosConNovedad.length)}</span>
+                        <div class="pagination-btns">
+                            <button class="page-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>««</button>
+                            <button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>«</button>
+                            ${generatePaginationButtons(currentPage, totalPages)}
+                            <button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>»</button>
+                            <button class="page-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>»»</button>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Show novedad detail modal
+        function showNovedadDetail(id) {
+            const order = filteredData.find(o => o.id === id);
+            if (!order) return;
+
+            document.getElementById('modalTitle').innerHTML = `⚠️ Detalle de Novedad - ${order.orderId}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="kpi-grid" style="margin-bottom:20px;">
+                    <div class="kpi-card ${order.novedadSolucionada && order.novedadSolucionada.toLowerCase().includes('si') ? 'emerald' : 'red'}">
+                        <div class="kpi-label">Estado Novedad</div>
+                        <div class="kpi-value" style="font-size:18px;">${order.novedadSolucionada && order.novedadSolucionada.toLowerCase().includes('si') ? '✅ SOLUCIONADA' : '🔴 PENDIENTE'}</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-label">Valor Pedido</div>
+                        <div class="kpi-value">${formatCOP(order.total)}</div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <tbody>
+                        <tr><td style="width:200px;"><strong>N° Guía</strong></td><td style="font-family:monospace;">${order.guia || '-'}</td></tr>
+                        <tr><td><strong>Teléfono</strong></td><td style="font-family:monospace;">${order.telefono || '-'}</td></tr>
+                        <tr><td><strong>Cliente</strong></td><td>${order.cliente || '-'}</td></tr>
+                        <tr><td><strong>Producto</strong></td><td>${order.producto || '-'}</td></tr>
+                        <tr style="background:var(--amber-bg);"><td><strong>⚠️ NOVEDAD</strong></td><td><strong>${order.novedad || '-'}</strong></td></tr>
+                        <tr><td><strong>Fue Solucionada</strong></td><td><span class="status-badge ${order.novedadSolucionada && order.novedadSolucionada.toLowerCase().includes('si') ? 'entregado' : 'devolucion'}">${order.novedadSolucionada || 'NO'}</span></td></tr>
+                        <tr><td><strong>Hora de Novedad</strong></td><td>${order.horaNovedad || '-'}</td></tr>
+                        <tr><td><strong>Fecha de Novedad</strong></td><td>${order.fechaNovedad || '-'}</td></tr>
+                        <tr style="background:var(--emerald-bg);"><td><strong>✅ SOLUCIÓN</strong></td><td>${order.solucionNovedad || '-'}</td></tr>
+                        <tr><td><strong>Hora de Solución</strong></td><td>${order.horaSolucion || '-'}</td></tr>
+                        <tr><td><strong>Fecha de Solución</strong></td><td>${order.fechaSolucion || '-'}</td></tr>
+                        <tr><td><strong>Observación</strong></td><td>${order.observacion || '-'}</td></tr>
+                        <tr style="background:var(--blue-bg);"><td><strong>📍 ÚLTIMO MOVIMIENTO</strong></td><td>${order.ultimoMovimiento || '-'}</td></tr>
+                        <tr><td><strong>Hora Último Mov.</strong></td><td>${order.horaUltimoMovimiento || '-'}</td></tr>
+                        <tr><td><strong>Fecha Último Mov.</strong></td><td>${order.fechaUltimoMovimiento || '-'}</td></tr>
+                        <tr><td><strong>Concepto Último Mov.</strong></td><td>${order.conceptoUltimoMovimiento || '-'}</td></tr>
+                        <tr><td><strong>Ubicación Último Mov.</strong></td><td>${order.ubicacionUltimoMovimiento || '-'}</td></tr>
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        // Search novedades by field
+        function searchNovedadesByField(field, query) {
+            const rows = document.querySelectorAll('#novedadesTable tbody tr');
+            query = query.toLowerCase().trim();
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                let value = '';
+                if (field === 'guia') value = cells[1]?.textContent || '';
+                if (field === 'telefono') value = cells[2]?.textContent || '';
+                row.style.display = value.toLowerCase().includes(query) ? '' : 'none';
+            });
+        }
+
+        // Filter novedades by estado
+        function filterNovedadesPorEstado(estado) {
+            const rows = document.querySelectorAll('#novedadesTable tbody tr');
+            rows.forEach(row => {
+                if (!estado) {
+                    row.style.display = '';
+                } else if (estado === 'pendiente') {
+                    row.style.display = row.classList.contains('novedad-pendiente') ? '' : 'none';
+                } else if (estado === 'solucionada') {
+                    row.style.display = !row.classList.contains('novedad-pendiente') ? '' : 'none';
+                }
+            });
+        }
+
+        // Render Ganancias
+        function renderGanancias(stats) {
+            // Agrupar por día
+            const porDia = {};
+            const porSemana = {};
+            const porMes = {};
+
+            filteredData.filter(o => o.estatus === 'ENTREGADO').forEach(o => {
+                if (!o.fecha) return;
+                const fecha = new Date(o.fecha);
+                const dia = fecha.toISOString().split('T')[0];
+                const semana = getWeekNumber(fecha);
+                const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+
+                if (!porDia[dia]) porDia[dia] = { ventas: 0, ganancia: 0, flete: 0, devFlete: 0, comision: 0, costoProveedor: 0, pedidos: 0 };
+                if (!porSemana[semana]) porSemana[semana] = { ventas: 0, ganancia: 0, flete: 0, devFlete: 0, comision: 0, costoProveedor: 0, pedidos: 0 };
+                if (!porMes[mes]) porMes[mes] = { ventas: 0, ganancia: 0, flete: 0, devFlete: 0, comision: 0, costoProveedor: 0, pedidos: 0 };
+
+                [porDia[dia], porSemana[semana], porMes[mes]].forEach(g => {
+                    g.ventas += o.total;
+                    g.ganancia += o.ganancia;
+                    g.flete += o.flete;
+                    g.devFlete += o.costoDevolucion;
+                    g.comision += o.comision;
+                    g.costoProveedor += o.costoProveedor;
+                    g.pedidos++;
+                });
+            });
+
+            const diasArray = Object.entries(porDia).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
+            const semanasArray = Object.entries(porSemana).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+            const mesesArray = Object.entries(porMes).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+
+            const totalGanancia = stats.gananciaTotal;
+            const totalFlete = filteredData.filter(o => o.estatus === 'ENTREGADO').reduce((s, o) => s + o.flete, 0);
+            const totalComision = filteredData.filter(o => o.estatus === 'ENTREGADO').reduce((s, o) => s + o.comision, 0);
+            const totalCostoProveedor = filteredData.filter(o => o.estatus === 'ENTREGADO').reduce((s, o) => s + o.costoProveedor, 0);
+
+            return `
+                <div class="kpi-grid">
+                    <div class="kpi-card emerald">
+                        <div class="kpi-icon">💵</div>
+                        <div class="kpi-label">Ganancia Total</div>
+                        <div class="kpi-value">${formatCOP(totalGanancia)}</div>
+                        <div class="kpi-subtitle">Solo pedidos entregados</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-icon">🚚</div>
+                        <div class="kpi-label">Total Fletes</div>
+                        <div class="kpi-value">${formatCOP(totalFlete)}</div>
+                        <div class="kpi-subtitle">Costo de envíos</div>
+                    </div>
+                    <div class="kpi-card violet">
+                        <div class="kpi-icon">💼</div>
+                        <div class="kpi-label">Comisiones</div>
+                        <div class="kpi-value">${formatCOP(totalComision)}</div>
+                        <div class="kpi-subtitle">Total comisiones</div>
+                    </div>
+                    <div class="kpi-card amber">
+                        <div class="kpi-icon">📦</div>
+                        <div class="kpi-label">Costo Proveedor</div>
+                        <div class="kpi-value">${formatCOP(totalCostoProveedor)}</div>
+                        <div class="kpi-subtitle">Costo de productos</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <input type="text" class="table-search" placeholder="🔍 Buscar por Guía..." oninput="searchGananciaByField('guia', this.value)" style="min-width:150px;">
+                    <input type="text" class="table-search" placeholder="📱 Buscar por Teléfono..." oninput="searchGananciaByField('telefono', this.value)" style="min-width:150px;">
+                </div>
+
+                <div class="charts-grid" style="margin-bottom:20px;">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">📈 Ganancias por Día (Últimos 30 días)</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="gananciaDiaChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">📊 Ganancias por Mes</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="gananciaMesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">📅 Ganancias por Día</div>
+                    </div>
+                    <div style="overflow-x:auto;max-height:400px;">
+                        <table class="data-table">
+                            <thead style="position:sticky;top:0;background:var(--bg-card);">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Pedidos</th>
+                                    <th>Ventas</th>
+                                    <th>Costo Proveedor</th>
+                                    <th>Flete</th>
+                                    <th>Comisión</th>
+                                    <th>Ganancia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${diasArray.map(([fecha, data]) => `
+                                    <tr>
+                                        <td><strong>${fecha}</strong></td>
+                                        <td>${data.pedidos}</td>
+                                        <td>${formatCOP(data.ventas)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.costoProveedor)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.flete)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.comision)}</td>
+                                        <td><strong style="color:var(--emerald)">${formatCOP(data.ganancia)}</strong></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">📆 Ganancias por Semana</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Semana</th>
+                                    <th>Pedidos</th>
+                                    <th>Ventas</th>
+                                    <th>Costo Proveedor</th>
+                                    <th>Flete</th>
+                                    <th>Comisión</th>
+                                    <th>Ganancia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${semanasArray.map(([semana, data]) => `
+                                    <tr>
+                                        <td><strong>${semana}</strong></td>
+                                        <td>${data.pedidos}</td>
+                                        <td>${formatCOP(data.ventas)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.costoProveedor)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.flete)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.comision)}</td>
+                                        <td><strong style="color:var(--emerald)">${formatCOP(data.ganancia)}</strong></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">📊 Ganancias por Mes</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Mes</th>
+                                    <th>Pedidos</th>
+                                    <th>Ventas</th>
+                                    <th>Costo Proveedor</th>
+                                    <th>Flete</th>
+                                    <th>Comisión</th>
+                                    <th>Ganancia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${mesesArray.map(([mes, data]) => `
+                                    <tr>
+                                        <td><strong>${mes}</strong></td>
+                                        <td>${data.pedidos}</td>
+                                        <td>${formatCOP(data.ventas)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.costoProveedor)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.flete)}</td>
+                                        <td style="color:var(--text-muted)">-${formatCOP(data.comision)}</td>
+                                        <td><strong style="color:var(--emerald)">${formatCOP(data.ganancia)}</strong></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get week number helper
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        }
+
+        // Search ganancias by field
+        function searchGananciaByField(field, query) {
+            if (!dropiData) return;
+            query = query.toLowerCase().trim();
+            if (!query) {
+                filteredData = [...dropiData.orders];
+            } else {
+                filteredData = dropiData.orders.filter(o =>
+                    (o[field] || '').toLowerCase().includes(query)
+                );
+            }
+            currentPage = 1;
+            const stats = calculateStats(filteredData);
+            document.getElementById('content').innerHTML = renderGanancias(stats);
+            setTimeout(() => initGananciasCharts(), 100);
+        }
+
+        // Initialize ganancias charts
+        function initGananciasCharts() {
+            const entregados = filteredData.filter(o => o.estatus === 'ENTREGADO');
+            const porDia = {};
+            const porMes = {};
+
+            entregados.forEach(o => {
+                if (!o.fecha) return;
+                const fecha = new Date(o.fecha);
+                const dia = fecha.toISOString().split('T')[0];
+                const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+
+                if (!porDia[dia]) porDia[dia] = 0;
+                if (!porMes[mes]) porMes[mes] = 0;
+                porDia[dia] += o.ganancia;
+                porMes[mes] += o.ganancia;
+            });
+
+            const diasArray = Object.entries(porDia).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
+            const mesesArray = Object.entries(porMes).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af', maxRotation: 45 } }
+                }
+            };
+
+            // Ganancia por día
+            const ctxDia = document.getElementById('gananciaDiaChart');
+            if (ctxDia) {
+                if (charts.gananciaDia) charts.gananciaDia.destroy();
+                charts.gananciaDia = new Chart(ctxDia, {
+                    type: 'bar',
+                    data: {
+                        labels: diasArray.map(d => d[0].substring(5)),
+                        datasets: [{
+                            data: diasArray.map(d => d[1]),
+                            backgroundColor: '#10B981',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: chartOptions
+                });
+            }
+
+            // Ganancia por mes
+            const ctxMes = document.getElementById('gananciaMesChart');
+            if (ctxMes) {
+                if (charts.gananciaMes) charts.gananciaMes.destroy();
+                charts.gananciaMes = new Chart(ctxMes, {
+                    type: 'line',
+                    data: {
+                        labels: mesesArray.map(m => m[0]),
+                        datasets: [{
+                            data: mesesArray.map(m => m[1]),
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16,185,129,0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: chartOptions
+                });
+            }
+        }
+
         // Helper functions
         function getStatusClass(status) {
             if (status === 'ENTREGADO') return 'entregado';
@@ -2021,23 +2547,76 @@
             renderContent();
         }
         
-        // Search table
+        // Search table - general search
         function searchTable(query) {
             if (!dropiData) return;
-            
-            query = query.toLowerCase();
-            filteredData = dropiData.orders.filter(o => 
-                (o.cliente || '').toLowerCase().includes(query) ||
-                (o.orderId + '').toLowerCase().includes(query) ||
-                (o.ciudad || '').toLowerCase().includes(query) ||
-                (o.producto || '').toLowerCase().includes(query) ||
-                (o.telefono + '').includes(query)
-            );
-            
+
+            query = query.toLowerCase().trim();
+            if (!query) {
+                filteredData = [...dropiData.orders];
+            } else {
+                filteredData = dropiData.orders.filter(o =>
+                    (o.cliente || '').toLowerCase().includes(query) ||
+                    (o.orderId + '').toLowerCase().includes(query) ||
+                    (o.ciudad || '').toLowerCase().includes(query) ||
+                    (o.producto || '').toLowerCase().includes(query) ||
+                    (o.telefono + '').toLowerCase().includes(query) ||
+                    (o.guia || '').toLowerCase().includes(query) ||
+                    (o.estatus || '').toLowerCase().includes(query)
+                );
+            }
+
             currentPage = 1;
             renderContent();
         }
-        
+
+        // Search by specific field
+        function searchByField(field, query) {
+            if (!dropiData) return;
+
+            query = query.toLowerCase().trim();
+            if (!query) {
+                filteredData = [...dropiData.orders];
+            } else {
+                filteredData = dropiData.orders.filter(o =>
+                    (o[field] || '').toLowerCase().includes(query)
+                );
+            }
+
+            currentPage = 1;
+            renderContent();
+        }
+
+        // Search by field and render specific tab
+        function searchByFieldAndRender(field, query, tab) {
+            if (!dropiData) return;
+
+            query = query.toLowerCase().trim();
+            if (!query) {
+                filteredData = [...dropiData.orders];
+            } else {
+                filteredData = dropiData.orders.filter(o =>
+                    (o[field] || '').toLowerCase().includes(query)
+                );
+            }
+
+            currentPage = 1;
+            const stats = calculateStats(filteredData);
+            let html = '';
+            switch(tab) {
+                case 'estatus':
+                    html = renderEstatus(stats);
+                    break;
+                case 'novedades':
+                    html = renderNovedades(stats);
+                    break;
+                case 'ganancias':
+                    html = renderGanancias(stats);
+                    break;
+            }
+            document.getElementById('content').innerHTML = html;
+        }
+
         // Sort table
         let sortColumn = '';
         let sortAsc = true;
@@ -2121,36 +2700,55 @@
         
         function showStatusDetail(status) {
             const orders = filteredData.filter(o => o.estatus === status);
-            
+
             document.getElementById('modalTitle').innerHTML = `<span class="status-badge ${getStatusClass(status)}">${status}</span> ${orders.length} pedidos`;
             document.getElementById('modalBody').innerHTML = `
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Fecha</th>
-                            <th>Cliente</th>
-                            <th>Ciudad</th>
-                            <th>Producto</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${orders.slice(0, 100).map(o => `
+                <div style="margin-bottom:15px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <input type="text" class="table-search" placeholder="🔍 Buscar por Guía..." oninput="filterModalTable(this.value, 'guia')" style="min-width:150px;">
+                    <input type="text" class="table-search" placeholder="📱 Buscar por Teléfono..." oninput="filterModalTable(this.value, 'telefono')" style="min-width:150px;">
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="data-table" id="modalTable">
+                        <thead>
                             <tr>
-                                <td><strong>${o.orderId}</strong></td>
-                                <td>${o.fechaStr}</td>
-                                <td>${o.cliente || '-'}</td>
-                                <td>${o.ciudad || '-'}</td>
-                                <td>${(o.producto || '').substring(0, 20)}</td>
-                                <td>${formatCOP(o.total)}</td>
+                                <th>ID</th>
+                                <th>N° Guía</th>
+                                <th>Teléfono</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Ciudad</th>
+                                <th>Producto</th>
+                                <th>Total</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${orders.slice(0, 100).map(o => `
+                                <tr data-guia="${o.guia || ''}" data-telefono="${o.telefono || ''}">
+                                    <td><strong>${o.orderId}</strong></td>
+                                    <td style="font-family:monospace;font-size:11px;">${o.guia || '-'}</td>
+                                    <td style="font-family:monospace;">${o.telefono || '-'}</td>
+                                    <td>${o.fechaStr}</td>
+                                    <td>${o.cliente || '-'}</td>
+                                    <td>${o.ciudad || '-'}</td>
+                                    <td>${(o.producto || '').substring(0, 20)}</td>
+                                    <td>${formatCOP(o.total)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
                 ${orders.length > 100 ? `<p style="text-align:center;color:var(--text-muted);margin-top:15px">Mostrando 100 de ${orders.length} pedidos</p>` : ''}
             `;
             document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function filterModalTable(query, field) {
+            const rows = document.querySelectorAll('#modalTable tbody tr');
+            query = query.toLowerCase();
+            rows.forEach(row => {
+                const value = (row.getAttribute('data-' + field) || '').toLowerCase();
+                row.style.display = value.includes(query) ? '' : 'none';
+            });
         }
         
         function showProductDetail(product) {
@@ -2161,7 +2759,19 @@
                 ganancia: orders.reduce((s, o) => s + o.ganancia, 0),
                 entregados: orders.filter(o => o.estatus === 'ENTREGADO').length
             };
-            
+
+            // Agrupar variaciones (tallas y colores)
+            const variaciones = {};
+            orders.forEach(o => {
+                const v = o.variacion || 'Sin variación';
+                if (!variaciones[v]) variaciones[v] = { cantidad: 0, ventas: 0 };
+                variaciones[v].cantidad += o.cantidad || 1;
+                variaciones[v].ventas += o.total;
+            });
+            const variacionesArray = Object.entries(variaciones)
+                .map(([nombre, data]) => ({ nombre, ...data }))
+                .sort((a, b) => b.cantidad - a.cantidad);
+
             document.getElementById('modalTitle').innerHTML = `🛍️ ${product}`;
             document.getElementById('modalBody').innerHTML = `
                 <div class="kpi-grid" style="margin-bottom:20px">
@@ -2182,30 +2792,64 @@
                         <div class="kpi-value" style="font-size:20px">${(stats.entregados / stats.total * 100).toFixed(1)}%</div>
                     </div>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Fecha</th>
-                            <th>Cliente</th>
-                            <th>Ciudad</th>
-                            <th>Estatus</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${orders.slice(0, 50).map(o => `
+
+                <div class="table-container" style="margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">👕 Variaciones más vendidas (Tallas/Colores)</div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
                             <tr>
-                                <td>${o.orderId}</td>
-                                <td>${o.fechaStr}</td>
-                                <td>${o.cliente || '-'}</td>
-                                <td>${o.ciudad || '-'}</td>
-                                <td><span class="status-badge ${getStatusClass(o.estatus)}">${o.estatus}</span></td>
-                                <td>${formatCOP(o.total)}</td>
+                                <th>Variación</th>
+                                <th>Cantidad Vendida</th>
+                                <th>Ventas</th>
+                                <th>% del Total</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${variacionesArray.slice(0, 15).map(v => `
+                                <tr>
+                                    <td><strong>${v.nombre}</strong></td>
+                                    <td>${v.cantidad}</td>
+                                    <td>${formatCOP(v.ventas)}</td>
+                                    <td>${(v.cantidad / orders.reduce((s, o) => s + (o.cantidad || 1), 0) * 100).toFixed(1)}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-title">📋 Últimos Pedidos</div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Variación</th>
+                                <th>Ciudad</th>
+                                <th>Estatus</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.slice(0, 50).map(o => `
+                                <tr>
+                                    <td>${o.orderId}</td>
+                                    <td>${o.fechaStr}</td>
+                                    <td>${o.cliente || '-'}</td>
+                                    <td style="font-size:12px;">${o.variacion || '-'}</td>
+                                    <td>${o.ciudad || '-'}</td>
+                                    <td><span class="status-badge ${getStatusClass(o.estatus)}">${o.estatus}</span></td>
+                                    <td>${formatCOP(o.total)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
             document.getElementById('modalOverlay').classList.add('active');
         }
@@ -2451,33 +3095,165 @@
             }
         }
         
-        // Export PDF
+        // Export PDF - Professional Report
         function exportPDF() {
-            const element = document.getElementById('content');
-            const opt = {
-                margin: 10,
-                filename: `Dashboard_Dropshipping_${new Date().toISOString().split('T')[0]}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, backgroundColor: '#0f0f14' },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            const tabTitles = {
+                resumen: 'Resumen General',
+                pedidos: 'Detalle de Pedidos',
+                estatus: 'Análisis por Estatus',
+                novedades: 'Reporte de Novedades',
+                productos: 'Análisis de Productos',
+                ciudades: 'Análisis por Ciudad',
+                transportadoras: 'Transportadoras',
+                ganancias: 'Reporte de Ganancias',
+                rentabilidad: 'Análisis de Rentabilidad'
             };
-            
-            html2pdf().set(opt).from(element).save();
+
+            const stats = dropiData ? calculateStats(filteredData) : null;
+            const today = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Create professional report wrapper
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'background:#fff;color:#1a1a24;padding:30px;font-family:Inter,sans-serif;';
+            wrapper.innerHTML = `
+                <div style="border-bottom:3px solid #10B981;padding-bottom:20px;margin-bottom:30px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <h1 style="margin:0;font-size:28px;color:#1a1a24;">📦 Bacano Store</h1>
+                            <p style="margin:5px 0 0;color:#666;font-size:14px;">Dashboard Dropshipping PRO</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <p style="margin:0;font-size:12px;color:#666;">Reporte generado:</p>
+                            <p style="margin:0;font-size:14px;font-weight:600;">${today}</p>
+                        </div>
+                    </div>
+                </div>
+                <h2 style="margin:0 0 20px;font-size:22px;color:#10B981;">${tabTitles[currentTab] || 'Reporte'}</h2>
+                ${stats ? `
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:25px;">
+                    <div style="background:#f8f9fa;padding:15px;border-radius:8px;border-left:4px solid #3B82F6;">
+                        <p style="margin:0;font-size:11px;color:#666;">Total Pedidos</p>
+                        <p style="margin:5px 0 0;font-size:20px;font-weight:700;color:#1a1a24;">${formatNumber(stats.total)}</p>
+                    </div>
+                    <div style="background:#f8f9fa;padding:15px;border-radius:8px;border-left:4px solid #10B981;">
+                        <p style="margin:0;font-size:11px;color:#666;">Entregados</p>
+                        <p style="margin:5px 0 0;font-size:20px;font-weight:700;color:#10B981;">${formatNumber(stats.entregados)} (${stats.tasaEfectividad}%)</p>
+                    </div>
+                    <div style="background:#f8f9fa;padding:15px;border-radius:8px;border-left:4px solid #8B5CF6;">
+                        <p style="margin:0;font-size:11px;color:#666;">Ventas Efectivas</p>
+                        <p style="margin:5px 0 0;font-size:20px;font-weight:700;color:#8B5CF6;">${formatCOP(stats.ventasEfectivas)}</p>
+                    </div>
+                    <div style="background:#f8f9fa;padding:15px;border-radius:8px;border-left:4px solid #F59E0B;">
+                        <p style="margin:0;font-size:11px;color:#666;">Ganancia Total</p>
+                        <p style="margin:5px 0 0;font-size:20px;font-weight:700;color:#F59E0B;">${formatCOP(stats.gananciaTotal)}</p>
+                    </div>
+                </div>
+                ` : ''}
+                <div id="reportContent" style="background:#fff;"></div>
+                <div style="margin-top:30px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center;">
+                    <p style="margin:0;font-size:11px;color:#9ca3af;">Este reporte fue generado automáticamente por Dashboard Dropshipping PRO - Bacano Store</p>
+                </div>
+            `;
+
+            // Clone content and adjust styles for print
+            const contentClone = document.getElementById('content').cloneNode(true);
+            contentClone.querySelectorAll('*').forEach(el => {
+                el.style.color = el.style.color || '#1a1a24';
+                if (el.classList.contains('kpi-card')) {
+                    el.style.background = '#f8f9fa';
+                    el.style.border = '1px solid #e5e7eb';
+                }
+                if (el.classList.contains('table-container')) {
+                    el.style.background = '#fff';
+                    el.style.border = '1px solid #e5e7eb';
+                }
+                if (el.tagName === 'TABLE') {
+                    el.style.borderCollapse = 'collapse';
+                }
+                if (el.tagName === 'TH' || el.tagName === 'TD') {
+                    el.style.border = '1px solid #e5e7eb';
+                    el.style.padding = '8px';
+                }
+            });
+            wrapper.querySelector('#reportContent').appendChild(contentClone);
+
+            document.body.appendChild(wrapper);
+
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `Bacano_Store_${tabTitles[currentTab] || 'Reporte'}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(wrapper).save().then(() => {
+                document.body.removeChild(wrapper);
+            });
         }
-        
+
         function exportModalPDF() {
-            const element = document.querySelector('.modal');
+            const modalTitle = document.getElementById('modalTitle').textContent;
+            const today = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'background:#fff;color:#1a1a24;padding:30px;font-family:Inter,sans-serif;';
+            wrapper.innerHTML = `
+                <div style="border-bottom:3px solid #10B981;padding-bottom:20px;margin-bottom:30px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <h1 style="margin:0;font-size:24px;color:#1a1a24;">📦 Bacano Store</h1>
+                            <p style="margin:5px 0 0;color:#666;font-size:12px;">Dashboard Dropshipping PRO</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <p style="margin:0;font-size:11px;color:#666;">Generado:</p>
+                            <p style="margin:0;font-size:13px;font-weight:600;">${today}</p>
+                        </div>
+                    </div>
+                </div>
+                <h2 style="margin:0 0 20px;font-size:18px;color:#10B981;">${modalTitle}</h2>
+                <div id="modalReportContent"></div>
+                <div style="margin-top:25px;padding-top:15px;border-top:1px solid #e5e7eb;text-align:center;">
+                    <p style="margin:0;font-size:10px;color:#9ca3af;">Reporte generado por Dashboard Dropshipping PRO - Bacano Store</p>
+                </div>
+            `;
+
+            const modalClone = document.getElementById('modalBody').cloneNode(true);
+            modalClone.querySelectorAll('*').forEach(el => {
+                el.style.color = el.style.color || '#1a1a24';
+                if (el.classList.contains('kpi-card')) {
+                    el.style.background = '#f8f9fa';
+                    el.style.border = '1px solid #e5e7eb';
+                }
+                if (el.tagName === 'TABLE') {
+                    el.style.borderCollapse = 'collapse';
+                    el.style.width = '100%';
+                }
+                if (el.tagName === 'TH' || el.tagName === 'TD') {
+                    el.style.border = '1px solid #e5e7eb';
+                    el.style.padding = '6px 8px';
+                    el.style.fontSize = '11px';
+                }
+            });
+            wrapper.querySelector('#modalReportContent').appendChild(modalClone);
+
+            document.body.appendChild(wrapper);
+
             const opt = {
-                margin: 10,
-                filename: `Detalle_${new Date().toISOString().split('T')[0]}.pdf`,
+                margin: [10, 10, 10, 10],
+                filename: `Bacano_Store_Detalle_${new Date().toISOString().split('T')[0]}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, backgroundColor: '#1a1a24' },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
-            
-            html2pdf().set(opt).from(element).save();
+
+            html2pdf().set(opt).from(wrapper).save().then(() => {
+                document.body.removeChild(wrapper);
+            });
         }
-        
+
         function refreshData() {
             if (dropiData) {
                 filteredData = [...dropiData.orders];
