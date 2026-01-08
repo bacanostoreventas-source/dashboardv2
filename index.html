@@ -2220,26 +2220,58 @@
                 .map(([name, data]) => ({
                     name,
                     ...data,
-                    efectividad: (data.entregados + data.devoluciones) > 0 
-                        ? (data.entregados / (data.entregados + data.devoluciones) * 100).toFixed(1) 
+                    efectividad: (data.entregados + data.devoluciones) > 0
+                        ? (data.entregados / (data.entregados + data.devoluciones) * 100).toFixed(1)
                         : 0
                 }))
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 30);
-            
+                .sort((a, b) => b.total - a.total);
+
+            // Ranking de efectividad (de mayor a menor)
+            const ciudadesConVolumen = ciudadesArray.filter(c => (c.entregados + c.devoluciones) >= 3);
+            const rankingEfectividad = [...ciudadesConVolumen].sort((a, b) => Number(b.efectividad) - Number(a.efectividad)).slice(0, 10);
+
+            // Calcular costos de devolución por ciudad (deduplicando por guía)
+            const devolucionesPorCiudad = {};
+            const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION');
+            const guiasProcesadas = {};
+
+            devoluciones.forEach(o => {
+                if (!o.ciudad) return;
+                const guiaKey = o.guia || o.orderId;
+                if (!guiasProcesadas[guiaKey]) {
+                    guiasProcesadas[guiaKey] = true;
+                    if (!devolucionesPorCiudad[o.ciudad]) {
+                        devolucionesPorCiudad[o.ciudad] = { costo: 0, guias: 0 };
+                    }
+                    devolucionesPorCiudad[o.ciudad].costo += o.costoDevolucion || 0;
+                    devolucionesPorCiudad[o.ciudad].guias++;
+                }
+            });
+
+            // Ranking de costos de devolución (de mayor a menor)
+            const ciudadesCostoDev = Object.entries(devolucionesPorCiudad)
+                .map(([name, data]) => ({ name, ...data }))
+                .sort((a, b) => b.costo - a.costo)
+                .slice(0, 15);
+
+            // Calcular promedio de costo para alertas
+            const totalCostoDev = ciudadesCostoDev.reduce((s, c) => s + c.costo, 0);
+            const promedioCosto = ciudadesCostoDev.length > 0 ? totalCostoDev / ciudadesCostoDev.length : 0;
+            const umbralAlerta = promedioCosto * 1.5; // Alerta si supera 150% del promedio
+
             return `
                 <div class="kpi-grid">
                     <div class="kpi-card emerald">
                         <div class="kpi-icon">🏆</div>
                         <div class="kpi-label">Mejor Ciudad</div>
-                        <div class="kpi-value" style="font-size:20px">${ciudadesArray.filter(c => Number(c.efectividad) > 0).sort((a,b) => b.efectividad - a.efectividad)[0]?.name || '-'}</div>
-                        <div class="kpi-subtitle">${ciudadesArray.filter(c => Number(c.efectividad) > 0).sort((a,b) => b.efectividad - a.efectividad)[0]?.efectividad || 0}% efectividad</div>
+                        <div class="kpi-value" style="font-size:20px">${rankingEfectividad[0]?.name || '-'}</div>
+                        <div class="kpi-subtitle">${rankingEfectividad[0]?.efectividad || 0}% efectividad</div>
                     </div>
                     <div class="kpi-card red">
                         <div class="kpi-icon">⚠️</div>
                         <div class="kpi-label">Ciudad Crítica</div>
-                        <div class="kpi-value" style="font-size:20px">${ciudadesArray.filter(c => Number(c.efectividad) > 0 && c.total >= 5).sort((a,b) => a.efectividad - b.efectividad)[0]?.name || '-'}</div>
-                        <div class="kpi-subtitle">${ciudadesArray.filter(c => Number(c.efectividad) > 0 && c.total >= 5).sort((a,b) => a.efectividad - b.efectividad)[0]?.efectividad || 0}% efectividad</div>
+                        <div class="kpi-value" style="font-size:20px">${ciudadesConVolumen.length > 0 ? [...ciudadesConVolumen].sort((a,b) => Number(a.efectividad) - Number(b.efectividad))[0]?.name : '-'}</div>
+                        <div class="kpi-subtitle">${ciudadesConVolumen.length > 0 ? [...ciudadesConVolumen].sort((a,b) => Number(a.efectividad) - Number(b.efectividad))[0]?.efectividad : 0}% efectividad</div>
                     </div>
                     <div class="kpi-card blue">
                         <div class="kpi-icon">📍</div>
@@ -2253,15 +2285,96 @@
                         <div class="kpi-subtitle">${ciudadesArray[0]?.total || 0} pedidos</div>
                     </div>
                 </div>
-                
+
+                <!-- Ranking de Efectividad por Ciudad -->
+                <div class="table-container" style="margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">
+                            🎯 Mejor Efectividad de Entrega por Ciudades
+                            <span class="table-badge emerald">Top 10</span>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px">#</th>
+                                <th>Ciudad</th>
+                                <th>Pedidos</th>
+                                <th>Entregados</th>
+                                <th>Devoluciones</th>
+                                <th>Efectividad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rankingEfectividad.map((c, i) => `
+                                <tr class="clickable" onclick="showCityDetail('${c.name.replace(/'/g, "\\'")}')">
+                                    <td style="text-align:center;font-weight:bold;color:${i < 3 ? 'var(--emerald)' : 'inherit'}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1)}</td>
+                                    <td><strong>${c.name}</strong></td>
+                                    <td>${formatNumber(c.total)}</td>
+                                    <td style="color:var(--emerald)">${formatNumber(c.entregados)}</td>
+                                    <td style="color:var(--red)">${formatNumber(c.devoluciones)}</td>
+                                    <td><span class="status-badge entregado">${c.efectividad}%</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Costos de Devolución por Ciudad -->
+                <div class="table-container" style="margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">
+                            💸 Costo de Devoluciones por Ciudad
+                            <span class="table-badge red">Mayor a Menor</span>
+                        </div>
+                    </div>
+                    <div style="padding:10px 15px;background:rgba(239,68,68,0.1);border-radius:8px;margin-bottom:15px;border-left:4px solid var(--red);">
+                        <strong style="color:var(--red)">⚠️ Alerta de Costo Alto:</strong>
+                        <span style="color:#9ca3af;">Ciudades con costo > ${formatCOP(umbralAlerta)} tienen riesgo alto de pérdidas por devolución.</span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ciudad</th>
+                                <th>Guías Devueltas</th>
+                                <th>Costo Total</th>
+                                <th>Costo Promedio</th>
+                                <th>Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ciudadesCostoDev.map(c => {
+                                const costoPromedio = c.guias > 0 ? c.costo / c.guias : 0;
+                                const esAlerta = c.costo > umbralAlerta;
+                                return `
+                                    <tr style="${esAlerta ? 'background:rgba(239,68,68,0.1);' : ''}">
+                                        <td><strong>${c.name}</strong></td>
+                                        <td style="text-align:center">${c.guias}</td>
+                                        <td style="color:var(--red);font-weight:bold;">-${formatCOP(c.costo)}</td>
+                                        <td>-${formatCOP(costoPromedio)}</td>
+                                        <td style="text-align:center">
+                                            ${esAlerta ? '<span class="status-badge devolucion">🚨 ALTO RIESGO</span>' : '<span class="status-badge transporte">Normal</span>'}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    ${ciudadesCostoDev.length === 0 ? '<p style="text-align:center;padding:20px;color:#9ca3af;">No hay devoluciones registradas</p>' : ''}
+                </div>
+
+                <!-- Tabla general -->
                 <div class="table-container">
                     <div class="table-header">
                         <div class="table-title">
                             Rendimiento por Ciudad
                             <span class="table-badge">${ciudadesArray.length} ciudades</span>
                         </div>
+                        <input type="text" class="filter-input" placeholder="Buscar ciudad..."
+                               style="padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-primary);width:200px;"
+                               oninput="filterCiudadesTable(this.value)">
                     </div>
-                    <table class="data-table">
+                    <table class="data-table" id="ciudadesTable">
                         <thead>
                             <tr>
                                 <th>Ciudad</th>
@@ -2274,8 +2387,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${ciudadesArray.map(c => `
-                                <tr class="clickable" onclick="showCityDetail('${c.name.replace(/'/g, "\\'")}')">
+                            ${ciudadesArray.slice(0, 30).map(c => `
+                                <tr class="clickable ciudad-row" data-ciudad="${c.name.toLowerCase()}" onclick="showCityDetail('${c.name.replace(/'/g, "\\'")}')">
                                     <td><strong>${c.name}</strong></td>
                                     <td>${formatNumber(c.total)}</td>
                                     <td style="color:var(--emerald)">${formatNumber(c.entregados)}</td>
@@ -2302,8 +2415,44 @@
                         : 0
                 }))
                 .sort((a, b) => b.total - a.total);
-            
+
+            // Ranking de efectividad (de mayor a menor)
+            const rankingEfectividad = [...transpArray]
+                .filter(t => (t.entregados + t.devoluciones) >= 5)
+                .sort((a, b) => Number(b.efectividad) - Number(a.efectividad));
+
+            const mejorTransp = rankingEfectividad[0];
+            const peorTransp = rankingEfectividad.length > 1 ? rankingEfectividad[rankingEfectividad.length - 1] : null;
+
             return `
+                <!-- KPIs de Transportadoras -->
+                <div class="kpi-grid" style="margin-bottom:20px;">
+                    <div class="kpi-card emerald">
+                        <div class="kpi-icon">🏆</div>
+                        <div class="kpi-label">Mejor Transportadora</div>
+                        <div class="kpi-value" style="font-size:18px">${mejorTransp?.name || '-'}</div>
+                        <div class="kpi-subtitle">${mejorTransp?.efectividad || 0}% efectividad</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-icon">⚠️</div>
+                        <div class="kpi-label">Menor Efectividad</div>
+                        <div class="kpi-value" style="font-size:18px">${peorTransp?.name || '-'}</div>
+                        <div class="kpi-subtitle">${peorTransp?.efectividad || 0}% efectividad</div>
+                    </div>
+                    <div class="kpi-card blue">
+                        <div class="kpi-icon">🚛</div>
+                        <div class="kpi-label">Total Transportadoras</div>
+                        <div class="kpi-value">${transpArray.length}</div>
+                    </div>
+                    <div class="kpi-card violet">
+                        <div class="kpi-icon">📦</div>
+                        <div class="kpi-label">Mayor Volumen</div>
+                        <div class="kpi-value" style="font-size:18px">${transpArray[0]?.name || '-'}</div>
+                        <div class="kpi-subtitle">${transpArray[0]?.total || 0} pedidos</div>
+                    </div>
+                </div>
+
+                <!-- Cards de cada transportadora -->
                 <div class="kpi-grid">
                     ${transpArray.map(t => `
                         <div class="kpi-card ${Number(t.efectividad) >= 77 ? 'emerald' : Number(t.efectividad) >= 75 ? 'amber' : 'red'} clickable" onclick="showTransportDetail('${t.name}')">
@@ -2316,7 +2465,48 @@
                         </div>
                     `).join('')}
                 </div>
-                
+
+                <!-- Ranking de Efectividad -->
+                <div class="table-container" style="margin-top:20px;margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">
+                            🎯 Mejor Efectividad de Entrega por Transportadoras
+                            <span class="table-badge emerald">Ranking</span>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px">#</th>
+                                <th>Transportadora</th>
+                                <th>Pedidos Finalizados</th>
+                                <th>Entregados</th>
+                                <th>Devoluciones</th>
+                                <th>Efectividad</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rankingEfectividad.map((t, i) => `
+                                <tr class="clickable" onclick="showTransportDetail('${t.name}')">
+                                    <td style="text-align:center;font-weight:bold;color:${i < 3 ? 'var(--emerald)' : 'inherit'}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1)}</td>
+                                    <td><strong>${t.name}</strong></td>
+                                    <td style="text-align:center">${formatNumber(t.entregados + t.devoluciones)}</td>
+                                    <td style="color:var(--emerald)">${formatNumber(t.entregados)}</td>
+                                    <td style="color:var(--red)">${formatNumber(t.devoluciones)}</td>
+                                    <td><span class="status-badge ${Number(t.efectividad) >= 77 ? 'entregado' : Number(t.efectividad) >= 75 ? 'transporte' : 'devolucion'}">${t.efectividad}%</span></td>
+                                    <td style="text-align:center">
+                                        ${Number(t.efectividad) >= 77 ? '<span style="color:var(--emerald)">Excelente</span>' :
+                                          Number(t.efectividad) >= 75 ? '<span style="color:var(--amber)">Aceptable</span>' :
+                                          '<span style="color:var(--red)">Mejorar</span>'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    ${rankingEfectividad.length === 0 ? '<p style="text-align:center;padding:20px;color:#9ca3af;">No hay suficientes datos para el ranking</p>' : ''}
+                </div>
+
                 <div class="charts-grid">
                     <div class="chart-card full-width">
                         <div class="chart-header">
@@ -2327,7 +2517,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="table-container">
                     <div class="table-header">
                         <div class="table-title">Detalle por Transportadora</div>
@@ -3304,6 +3494,35 @@
                     break;
             }
             document.getElementById('content').innerHTML = html;
+        }
+
+        // Filter ciudades table (client-side filter without re-rendering)
+        function filterCiudadesTable(query) {
+            query = query.toLowerCase().trim();
+            const rows = document.querySelectorAll('.ciudad-row');
+            rows.forEach(row => {
+                const ciudad = row.getAttribute('data-ciudad') || '';
+                if (!query || ciudad.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Filter table rows in any data table
+        function filterTableRows(tableId, query, fieldIndex = 0) {
+            query = query.toLowerCase().trim();
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > fieldIndex) {
+                    const text = cells[fieldIndex].textContent.toLowerCase();
+                    row.style.display = (!query || text.includes(query)) ? '' : 'none';
+                }
+            });
         }
 
         // Sort table
