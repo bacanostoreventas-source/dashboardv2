@@ -564,27 +564,121 @@
         .page-btn.active { background: var(--emerald); color: white; border-color: var(--emerald); }
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
+        /* Responsive utilities */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .mono-text { font-family: monospace; font-size: 12px; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
         /* Print styles */
         @media print {
             .sidebar, .header-actions, .filters-bar, .upload-btn, .modal-overlay { display: none !important; }
             .main-content { margin-left: 0 !important; }
             .kpi-card, .chart-card, .table-container { break-inside: avoid; }
         }
-        
-        /* Responsive */
+
+        /* Desktop Large */
+        @media (max-width: 1400px) {
+            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* Tablet Landscape */
+        @media (max-width: 1200px) {
+            .sidebar { width: 220px; padding: 15px; }
+            .main-content { margin-left: 220px; padding: 20px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .hide-tablet { display: none !important; }
+        }
+
+        /* Tablet Portrait */
         @media (max-width: 1024px) {
-            .sidebar { display: none; }
-            .main-content { margin-left: 0; }
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1000;
+                width: 280px;
+                transition: left 0.3s ease;
+            }
+            .sidebar.open { left: 0; }
+            .main-content { margin-left: 0; padding: 15px; }
             .charts-grid { grid-template-columns: 1fr; }
             .chart-card.full-width { grid-column: span 1; }
+            .header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .header-actions { width: 100%; justify-content: flex-end; }
+            .status-summary { grid-template-columns: repeat(2, 1fr); }
         }
-        
+
+        /* Mobile */
         @media (max-width: 768px) {
-            .kpi-grid { grid-template-columns: 1fr 1fr; }
-            .filters-bar { flex-direction: column; }
-            .filter-group { width: 100%; }
-            .filter-group input, .filter-group select { width: 100%; }
+            .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .kpi-card { padding: 15px; }
+            .kpi-value { font-size: 22px; }
+            .kpi-icon { width: 35px; height: 35px; font-size: 16px; }
+            .filters-bar {
+                flex-direction: column;
+                padding: 15px;
+                gap: 10px;
+            }
+            .filter-group { width: 100%; min-width: unset !important; }
+            .filter-group input, .filter-group select { width: 100%; min-width: unset; }
+            .table-container { padding: 12px; }
+            .table-header { flex-direction: column; gap: 10px; }
+            .table-title { font-size: 14px; }
+            .data-table th, .data-table td { padding: 8px 6px; font-size: 12px; }
+            .hide-mobile { display: none !important; }
+            .status-summary { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .status-card { padding: 12px; }
+            .status-card-count { font-size: 22px; }
+            .pagination { flex-direction: column; gap: 10px; }
+            .pagination-info { font-size: 12px; }
+            .page-btn { padding: 8px 12px; font-size: 12px; }
+            .header-title h2 { font-size: 18px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .modal { width: 95%; max-height: 90vh; margin: 20px auto; padding: 15px; }
+            .login-container { padding: 30px 20px; }
+            .login-title { font-size: 22px; }
         }
+
+        /* Small Mobile */
+        @media (max-width: 480px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .status-summary { grid-template-columns: 1fr; }
+            .header-actions { flex-wrap: wrap; }
+            .header-actions .btn { flex: 1; min-width: 100px; justify-content: center; }
+            .user-info { flex-wrap: wrap; }
+            .pagination-btns { flex-wrap: wrap; justify-content: center; }
+        }
+
+        /* Mobile menu toggle */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--emerald);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        @media (max-width: 1024px) {
+            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .sidebar-overlay.open { display: block; }
         
         /* Loading spinner */
         .spinner {
@@ -706,8 +800,12 @@
     </div>
 
     <div class="app-container" id="appContainer" style="display: none;">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
+
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <div class="logo-icon">📦</div>
                 <div class="logo-text">
@@ -799,6 +897,10 @@
             
             <!-- Filters -->
             <div class="filters-bar" id="filtersBar">
+                <div class="filter-group" style="flex:1;min-width:250px;">
+                    <label>🔍 Buscar (Cliente, Guía, ID)</label>
+                    <input type="text" id="filterSearch" placeholder="Buscar por cliente, N° guía o ID..." oninput="searchTable(this.value)">
+                </div>
                 <div class="filter-group">
                     <label>Fecha Inicio</label>
                     <input type="date" id="filterDateStart" onchange="applyFilters()">
@@ -1409,7 +1511,9 @@
             document.getElementById('filterStatus').value = '';
             document.getElementById('filterTransport').value = '';
             document.getElementById('filterCity').value = '';
-            
+            const searchInput = document.getElementById('filterSearch');
+            if (searchInput) searchInput.value = '';
+
             if (dropiData) filteredData = [...dropiData.orders];
             renderContent();
         }
@@ -1626,46 +1730,41 @@
 
             return `
                 <div class="table-container">
-                    <div class="table-header" style="flex-wrap:wrap;gap:10px;">
+                    <div class="table-header">
                         <div class="table-title">
                             Todos los Pedidos
                             <span class="table-badge">${formatNumber(filteredData.length)} registros</span>
                         </div>
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            <input type="text" class="table-search" id="searchGeneral" placeholder="🔍 Buscar general..." oninput="searchTable(this.value)" style="min-width:180px;">
-                            <input type="text" class="table-search" id="searchGuia" placeholder="🔍 Buscar por Guía..." oninput="searchByField('guia', this.value)" style="min-width:150px;">
-                            <input type="text" class="table-search" id="searchTelefono" placeholder="📱 Buscar por Teléfono..." oninput="searchByField('telefono', this.value)" style="min-width:150px;">
-                        </div>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div class="table-responsive">
                         <table class="data-table" id="ordersTable">
                             <thead>
                                 <tr>
                                     <th onclick="sortTable('orderId')">ID ↕</th>
                                     <th onclick="sortTable('guia')">N° Guía ↕</th>
-                                    <th onclick="sortTable('telefono')">Teléfono ↕</th>
-                                    <th onclick="sortTable('fechaStr')">Fecha ↕</th>
+                                    <th onclick="sortTable('telefono')" class="hide-mobile">Teléfono ↕</th>
+                                    <th onclick="sortTable('fechaStr')" class="hide-mobile">Fecha ↕</th>
                                     <th onclick="sortTable('cliente')">Cliente ↕</th>
-                                    <th onclick="sortTable('ciudad')">Ciudad ↕</th>
-                                    <th onclick="sortTable('producto')">Producto ↕</th>
+                                    <th onclick="sortTable('ciudad')" class="hide-mobile">Ciudad ↕</th>
+                                    <th onclick="sortTable('producto')" class="hide-tablet">Producto ↕</th>
                                     <th onclick="sortTable('total')">Total ↕</th>
                                     <th onclick="sortTable('estatus')">Estatus ↕</th>
-                                    <th>Acciones</th>
+                                    <th class="hide-mobile">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${pageData.map(o => `
-                                    <tr class="clickable" ondblclick="showOrderDetail(${o.id})">
+                                    <tr class="clickable" onclick="showOrderDetail(${o.id})">
                                         <td><strong>${o.orderId}</strong></td>
-                                        <td style="font-family:monospace;font-size:12px;">${o.guia || '-'}</td>
-                                        <td style="font-family:monospace;">${o.telefono || '-'}</td>
-                                        <td>${o.fechaStr}</td>
+                                        <td class="mono-text">${o.guia || '-'}</td>
+                                        <td class="mono-text hide-mobile">${o.telefono || '-'}</td>
+                                        <td class="hide-mobile">${o.fechaStr}</td>
                                         <td>${o.cliente || '-'}</td>
-                                        <td>${o.ciudad || '-'}</td>
-                                        <td>${(o.producto || '').substring(0, 20)}${(o.producto || '').length > 20 ? '...' : ''}</td>
+                                        <td class="hide-mobile">${o.ciudad || '-'}</td>
+                                        <td class="hide-tablet">${(o.producto || '').substring(0, 20)}${(o.producto || '').length > 20 ? '...' : ''}</td>
                                         <td><strong>${formatCOP(o.total)}</strong></td>
                                         <td><span class="status-badge ${getStatusClass(o.estatus)}">${o.estatus}</span></td>
-                                        <td><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="showOrderDetail(${o.id})">Ver</button></td>
+                                        <td class="hide-mobile"><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showOrderDetail(${o.id})">Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -1709,10 +1808,6 @@
                 });
 
             return `
-                <div style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;">
-                    <input type="text" class="table-search" id="searchEstatusGuia" placeholder="🔍 Buscar por N° Guía..." oninput="searchByFieldAndRender('guia', this.value, 'estatus')" style="min-width:180px;">
-                    <input type="text" class="table-search" id="searchEstatusTelefono" placeholder="📱 Buscar por Teléfono..." oninput="searchByFieldAndRender('telefono', this.value, 'estatus')" style="min-width:180px;">
-                </div>
                 <div class="status-summary">
                     ${estatusArray.map(s => `
                         <div class="status-card clickable" onclick="showStatusDetail('${s.name}')">
@@ -2928,7 +3023,27 @@
             if (e && e.target !== e.currentTarget) return;
             document.getElementById('modalOverlay').classList.remove('active');
         }
-        
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // Close mobile menu when clicking nav item
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.nav-item')) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('open');
+                }
+            }
+        });
+
         // Initialize charts
         function initCharts(stats) {
             // Destroy existing charts
