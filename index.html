@@ -31,6 +31,17 @@
             --pink: #EC4899;
             --pink-bg: rgba(236,72,153,0.15);
         }
+
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg-primary: #f5f5f7;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --border: #e5e5e5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+        }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -50,14 +61,18 @@
         
         /* Sidebar */
         .sidebar {
-            width: 260px;
+            width: 280px;
             background: var(--bg-secondary);
             border-right: 1px solid var(--border);
             padding: 20px;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            left: -280px;
+            z-index: 1000;
+            transition: left 0.3s ease;
         }
+        .sidebar.open { left: 0; }
         
         .logo {
             display: flex;
@@ -197,7 +212,7 @@
         /* Main Content */
         .main-content {
             flex: 1;
-            margin-left: 260px;
+            margin-left: 0;
             padding: 25px;
             min-height: 100vh;
         }
@@ -583,23 +598,13 @@
 
         /* Tablet Landscape */
         @media (max-width: 1200px) {
-            .sidebar { width: 220px; padding: 15px; }
-            .main-content { margin-left: 220px; padding: 20px; }
             .kpi-grid { grid-template-columns: repeat(2, 1fr); }
             .hide-tablet { display: none !important; }
         }
 
         /* Tablet Portrait */
         @media (max-width: 1024px) {
-            .sidebar {
-                position: fixed;
-                left: -280px;
-                z-index: 1000;
-                width: 280px;
-                transition: left 0.3s ease;
-            }
-            .sidebar.open { left: 0; }
-            .main-content { margin-left: 0; padding: 15px; }
+            .main-content { padding: 15px; }
             .charts-grid { grid-template-columns: 1fr; }
             .chart-card.full-width { grid-column: span 1; }
             .header { flex-direction: column; align-items: flex-start; gap: 15px; }
@@ -648,26 +653,7 @@
             .pagination-btns { flex-wrap: wrap; justify-content: center; }
         }
 
-        /* Mobile menu toggle */
-        .mobile-menu-btn {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: var(--emerald);
-            color: white;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 999;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        @media (max-width: 1024px) {
-            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
-        }
+        /* Sidebar Overlay */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -679,7 +665,106 @@
             z-index: 999;
         }
         .sidebar-overlay.open { display: block; }
-        
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover { background: var(--bg-secondary); border-color: var(--emerald); }
+
+        /* PDF Preview Modal */
+        .pdf-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            padding: 20px;
+            overflow: auto;
+        }
+        .pdf-preview-modal.open { display: flex; flex-direction: column; align-items: center; }
+        .pdf-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .pdf-preview-header h3 { color: var(--text-primary); font-size: 18px; }
+        .pdf-preview-actions { display: flex; gap: 10px; }
+        .pdf-preview-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+            max-height: calc(100vh - 140px);
+            overflow: auto;
+            color: #1a1a1a;
+        }
+        .pdf-preview-content .kpi-card,
+        .pdf-preview-content .table-container,
+        .pdf-preview-content .chart-card {
+            background: #f8f9fa;
+            border: 1px solid #e5e5e5;
+            color: #1a1a1a;
+        }
+        .pdf-preview-content .data-table th { background: #e9ecef; color: #1a1a1a; }
+        .pdf-preview-content .data-table td { color: #1a1a1a; border-color: #e5e5e5; }
+
+        /* Auto-scaling tables for PDF */
+        .table-auto-scale {
+            font-size: clamp(10px, 1.2vw, 14px);
+        }
+        .table-auto-scale th, .table-auto-scale td {
+            padding: clamp(4px, 0.8vw, 12px) clamp(6px, 1vw, 16px);
+            white-space: nowrap;
+        }
+        @media (max-width: 1600px) {
+            .table-auto-scale { font-size: 12px; }
+            .table-auto-scale th, .table-auto-scale td { padding: 8px 10px; }
+        }
+        @media (max-width: 1200px) {
+            .table-auto-scale { font-size: 11px; }
+            .table-auto-scale th, .table-auto-scale td { padding: 6px 8px; }
+        }
+
+        /* Hamburger Menu for all screen sizes */
+        .hamburger-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 22px;
+            transition: all 0.2s;
+        }
+        .hamburger-btn:hover { background: var(--bg-secondary); border-color: var(--emerald); }
+
         /* Loading spinner */
         .spinner {
             width: 20px;
@@ -800,8 +885,7 @@
     </div>
 
     <div class="app-container" id="appContainer" style="display: none;">
-        <!-- Mobile Menu Button -->
-        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        <!-- Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
 
         <!-- Sidebar -->
@@ -881,12 +965,16 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
-                <div class="header-title">
-                    <h2 id="pageTitle">Resumen General</h2>
-                    <p id="pageSubtitle">Vista general de tu negocio</p>
+                <div style="display:flex;align-items:center;gap:15px;">
+                    <button class="hamburger-btn" onclick="toggleMobileMenu()" title="Menú">☰</button>
+                    <div class="header-title">
+                        <h2 id="pageTitle">Resumen General</h2>
+                        <p id="pageSubtitle">Vista general de tu negocio</p>
+                    </div>
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-secondary" onclick="exportPDF()">
+                    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle" title="Cambiar tema">🌙</button>
+                    <button class="btn btn-secondary" onclick="showPDFPreview()">
                         📄 Exportar PDF
                     </button>
                     <button class="btn btn-primary" onclick="refreshData()">
@@ -974,6 +1062,18 @@
                 <button class="btn btn-primary" onclick="closeModal()">Cerrar</button>
             </div>
         </div>
+    </div>
+
+    <!-- PDF Preview Modal -->
+    <div class="pdf-preview-modal" id="pdfPreviewModal">
+        <div class="pdf-preview-header">
+            <h3>📄 Vista previa del PDF</h3>
+            <div class="pdf-preview-actions">
+                <button class="btn btn-primary" onclick="downloadPDF()">⬇️ Descargar PDF</button>
+                <button class="btn btn-secondary" onclick="closePDFPreview()">✕ Cerrar</button>
+            </div>
+        </div>
+        <div class="pdf-preview-content" id="pdfPreviewContent"></div>
     </div>
 
     <script>
@@ -1207,6 +1307,9 @@
 
         // Initialize on page load
         function init() {
+            // Load saved theme
+            loadSavedTheme();
+
             // Check authentication first
             if (checkAuth()) {
                 // If authenticated, load data from LocalStorage
@@ -1737,7 +1840,7 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="data-table" id="ordersTable">
+                        <table class="data-table table-auto-scale" id="ordersTable">
                             <thead>
                                 <tr>
                                     <th onclick="sortTable('orderId')">ID ↕</th>
@@ -2190,23 +2293,14 @@
                 </div>
 
                 <div class="table-container">
-                    <div class="table-header" style="flex-wrap:wrap;gap:10px;">
+                    <div class="table-header">
                         <div class="table-title">
                             Pedidos con Novedades
                             <span class="table-badge">${formatNumber(pedidosConNovedad.length)} registros</span>
                         </div>
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            <input type="text" class="table-search" placeholder="🔍 Buscar por Guía..." oninput="searchNovedadesByField('guia', this.value)" style="min-width:150px;">
-                            <input type="text" class="table-search" placeholder="📱 Buscar por Teléfono..." oninput="searchNovedadesByField('telefono', this.value)" style="min-width:150px;">
-                            <select class="table-search" onchange="filterNovedadesPorEstado(this.value)" style="min-width:150px;">
-                                <option value="">Todos los estados</option>
-                                <option value="pendiente">Pendientes</option>
-                                <option value="solucionada">Solucionadas</option>
-                            </select>
-                        </div>
                     </div>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table" id="novedadesTable">
+                    <div class="table-responsive">
+                        <table class="data-table table-auto-scale" id="novedadesTable">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -3043,6 +3137,146 @@
                 }
             }
         });
+
+        // ==================== THEME TOGGLE ====================
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeBtn = document.getElementById('themeToggle');
+            const currentTheme = html.getAttribute('data-theme');
+
+            if (currentTheme === 'light') {
+                html.removeAttribute('data-theme');
+                themeBtn.textContent = '🌙';
+                localStorage.setItem('bacano_theme', 'dark');
+            } else {
+                html.setAttribute('data-theme', 'light');
+                themeBtn.textContent = '☀️';
+                localStorage.setItem('bacano_theme', 'light');
+            }
+        }
+
+        // Load saved theme on startup
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('bacano_theme');
+            const themeBtn = document.getElementById('themeToggle');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                if (themeBtn) themeBtn.textContent = '☀️';
+            }
+        }
+
+        // ==================== PDF PREVIEW ====================
+        let pdfContentForDownload = null;
+
+        function showPDFPreview() {
+            const tabTitles = {
+                resumen: 'Resumen General',
+                pedidos: 'Detalle de Pedidos',
+                estatus: 'Análisis por Estatus',
+                novedades: 'Reporte de Novedades',
+                productos: 'Análisis de Productos',
+                ciudades: 'Análisis por Ciudad',
+                transportadoras: 'Transportadoras',
+                ganancias: 'Reporte de Ganancias',
+                rentabilidad: 'Análisis de Rentabilidad'
+            };
+
+            const stats = dropiData ? calculateStats(filteredData) : null;
+            const today = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Create professional report content
+            let content = `
+                <div style="border-bottom:3px solid #10B981;padding-bottom:20px;margin-bottom:30px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;">
+                        <div>
+                            <h1 style="margin:0;font-size:28px;color:#1a1a24;">📦 Bacano Store</h1>
+                            <p style="margin:5px 0 0;color:#666;font-size:14px;">Dashboard Dropshipping PRO</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <p style="margin:0;font-size:12px;color:#666;">Reporte: ${tabTitles[currentTab] || 'Dashboard'}</p>
+                            <p style="margin:5px 0 0;font-size:12px;color:#666;">Fecha: ${today}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add KPIs summary
+            if (stats) {
+                content += `
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:25px;">
+                        <div style="background:#f0fdf4;border:1px solid #10B981;border-radius:8px;padding:15px;text-align:center;">
+                            <div style="font-size:12px;color:#666;">Total Pedidos</div>
+                            <div style="font-size:22px;font-weight:700;color:#10B981;">${formatNumber(stats.totalPedidos)}</div>
+                        </div>
+                        <div style="background:#eff6ff;border:1px solid #3B82F6;border-radius:8px;padding:15px;text-align:center;">
+                            <div style="font-size:12px;color:#666;">Ventas Totales</div>
+                            <div style="font-size:22px;font-weight:700;color:#3B82F6;">${formatCOP(stats.totalVentas)}</div>
+                        </div>
+                        <div style="background:#f0fdf4;border:1px solid #10B981;border-radius:8px;padding:15px;text-align:center;">
+                            <div style="font-size:12px;color:#666;">Entregados</div>
+                            <div style="font-size:22px;font-weight:700;color:#10B981;">${formatNumber(stats.entregados)}</div>
+                        </div>
+                        <div style="background:#fef3c7;border:1px solid #F59E0B;border-radius:8px;padding:15px;text-align:center;">
+                            <div style="font-size:12px;color:#666;">En Proceso</div>
+                            <div style="font-size:22px;font-weight:700;color:#F59E0B;">${formatNumber(stats.enProceso)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Clone current content
+            const contentArea = document.getElementById('contentArea');
+            if (contentArea) {
+                content += contentArea.innerHTML;
+            }
+
+            // Show preview modal
+            const modal = document.getElementById('pdfPreviewModal');
+            const previewContent = document.getElementById('pdfPreviewContent');
+            previewContent.innerHTML = content;
+            modal.classList.add('open');
+
+            // Store for download
+            pdfContentForDownload = content;
+        }
+
+        function closePDFPreview() {
+            document.getElementById('pdfPreviewModal').classList.remove('open');
+        }
+
+        function downloadPDF() {
+            const tabTitles = {
+                resumen: 'Resumen_General',
+                pedidos: 'Detalle_Pedidos',
+                estatus: 'Analisis_Estatus',
+                novedades: 'Novedades',
+                productos: 'Productos',
+                ciudades: 'Ciudades',
+                transportadoras: 'Transportadoras',
+                ganancias: 'Ganancias',
+                rentabilidad: 'Rentabilidad'
+            };
+
+            const previewContent = document.getElementById('pdfPreviewContent');
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'background:#fff;color:#1a1a24;padding:30px;font-family:Inter,sans-serif;';
+            wrapper.innerHTML = previewContent.innerHTML;
+
+            const filename = `Bacano_Store_${tabTitles[currentTab] || 'Dashboard'}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+            const opt = {
+                margin: [10, 10],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(wrapper).save().then(() => {
+                closePDFPreview();
+            });
+        }
 
         // Initialize charts
         function initCharts(stats) {
