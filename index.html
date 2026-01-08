@@ -2365,7 +2365,17 @@
             const ventasTotales = filteredData.reduce((sum, o) => sum + o.total, 0);
             const costoProducto = filteredData.reduce((sum, o) => sum + o.costoProveedor, 0);
             const costoFlete = filteredData.reduce((sum, o) => sum + o.flete, 0);
-            const costoDevolucion = filteredData.filter(o => ['DEVOLUCION', 'CANCELADO'].includes(o.estatus)).reduce((sum, o) => sum + o.costoDevolucion + o.flete, 0);
+
+            // Costo devolución: solo DEVOLUCION, solo costoDevolucion, deduplicado por guía
+            const devolucionesRent = filteredData.filter(o => o.estatus === 'DEVOLUCION');
+            const guiasDevRent = {};
+            devolucionesRent.forEach(o => {
+                const guiaKey = o.guia || o.orderId;
+                if (!guiasDevRent[guiaKey]) {
+                    guiasDevRent[guiaKey] = o.costoDevolucion || 0;
+                }
+            });
+            const costoDevolucion = Object.values(guiasDevRent).reduce((s, c) => s + c, 0);
             
             return `
                 <div class="kpi-grid">
@@ -2630,13 +2640,15 @@
             const ingresosPorSemana = {};
             const ingresosPorMes = {};
 
-            // Salidas (devoluciones)
+            // Salidas (devoluciones) - deduplicadas por guía
             const salidasPorDia = {};
             const salidasPorSemana = {};
             const salidasPorMes = {};
 
             const entregados = filteredData.filter(o => o.estatus === 'ENTREGADO');
-            const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION' || o.estatus === 'CANCELADO');
+
+            // Solo DEVOLUCION, no CANCELADO
+            const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION');
 
             // Procesar ingresos
             entregados.forEach(o => {
@@ -2658,24 +2670,46 @@
                 });
             });
 
-            // Procesar salidas (devoluciones)
+            // Procesar salidas (devoluciones) - deduplicar por guía para no contar doble
+            // Primero agrupamos por guía para obtener el costo único por envío
+            const guiasProcesadas = {};
             devoluciones.forEach(o => {
-                if (!o.fecha) return;
-                const fecha = new Date(o.fecha);
+                const guiaKey = o.guia || o.orderId; // usar guía o ID si no hay guía
+                if (!guiasProcesadas[guiaKey]) {
+                    guiasProcesadas[guiaKey] = {
+                        guia: guiaKey,
+                        costoDevolucion: o.costoDevolucion || 0,
+                        fecha: o.fecha,
+                        pedidos: [o]
+                    };
+                } else {
+                    guiasProcesadas[guiaKey].pedidos.push(o);
+                    // Si el costo actual es 0 y este tiene costo, actualizar
+                    if (guiasProcesadas[guiaKey].costoDevolucion === 0 && o.costoDevolucion > 0) {
+                        guiasProcesadas[guiaKey].costoDevolucion = o.costoDevolucion;
+                    }
+                }
+            });
+
+            // Ahora procesar las guías únicas
+            Object.values(guiasProcesadas).forEach(guiaData => {
+                if (!guiaData.fecha) return;
+                const fecha = new Date(guiaData.fecha);
                 const dia = fecha.toISOString().split('T')[0];
                 const semana = getWeekNumber(fecha);
                 const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
 
-                const costoDevolucion = (o.costoDevolucion || 0) + (o.flete || 0);
+                // Solo usar costoDevolucion, NO flete
+                const costoDevolucion = guiaData.costoDevolucion || 0;
 
-                if (!salidasPorDia[dia]) salidasPorDia[dia] = { monto: 0, pedidos: 0, ids: [] };
-                if (!salidasPorSemana[semana]) salidasPorSemana[semana] = { monto: 0, pedidos: 0, ids: [] };
-                if (!salidasPorMes[mes]) salidasPorMes[mes] = { monto: 0, pedidos: 0, ids: [] };
+                if (!salidasPorDia[dia]) salidasPorDia[dia] = { monto: 0, pedidos: 0, guias: 0 };
+                if (!salidasPorSemana[semana]) salidasPorSemana[semana] = { monto: 0, pedidos: 0, guias: 0 };
+                if (!salidasPorMes[mes]) salidasPorMes[mes] = { monto: 0, pedidos: 0, guias: 0 };
 
                 [salidasPorDia[dia], salidasPorSemana[semana], salidasPorMes[mes]].forEach(g => {
                     g.monto += costoDevolucion;
-                    g.pedidos++;
-                    g.ids.push(o.id);
+                    g.pedidos += guiaData.pedidos.length;
+                    g.guias++;
                 });
             });
 
@@ -2689,7 +2723,11 @@
 
             const totalIngresos = entregados.reduce((s, o) => s + o.ganancia, 0);
             const totalVentas = entregados.reduce((s, o) => s + o.total, 0);
-            const totalSalidas = devoluciones.reduce((s, o) => s + (o.costoDevolucion || 0) + (o.flete || 0), 0);
+
+            // Total salidas: solo costoDevolucion, deduplicado por guía
+            const totalSalidas = Object.values(guiasProcesadas).reduce((s, g) => s + (g.costoDevolucion || 0), 0);
+            const totalGuiasDevolucion = Object.keys(guiasProcesadas).length;
+
             const balance = totalIngresos - totalSalidas;
 
             return `
@@ -2704,7 +2742,7 @@
                         <div class="kpi-icon">📤</div>
                         <div class="kpi-label">Total Salidas</div>
                         <div class="kpi-value">${formatCOP(totalSalidas)}</div>
-                        <div class="kpi-subtitle">${formatNumber(devoluciones.length)} devoluciones</div>
+                        <div class="kpi-subtitle">${formatNumber(totalGuiasDevolucion)} guías devueltas</div>
                     </div>
                     <div class="kpi-card ${balance >= 0 ? 'emerald' : 'red'}">
                         <div class="kpi-icon">💰</div>
@@ -2778,8 +2816,9 @@
                             <thead style="position:sticky;top:0;background:var(--bg-card);">
                                 <tr>
                                     <th>Fecha</th>
+                                    <th>Guías</th>
                                     <th>Pedidos</th>
-                                    <th>Costo</th>
+                                    <th>Costo Devolución</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -2787,6 +2826,7 @@
                                 ${salidasDiaArray.map(([fecha, data]) => `
                                     <tr>
                                         <td><strong>${fecha}</strong></td>
+                                        <td>${data.guias}</td>
                                         <td>${data.pedidos}</td>
                                         <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
                                         <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'dia', '${fecha}')">Ver</button></td>
@@ -2836,8 +2876,9 @@
                             <thead>
                                 <tr>
                                     <th>Semana</th>
+                                    <th>Guías</th>
                                     <th>Pedidos</th>
-                                    <th>Costo</th>
+                                    <th>Costo Devolución</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -2845,6 +2886,7 @@
                                 ${salidasSemanaArray.map(([semana, data]) => `
                                     <tr>
                                         <td><strong>${semana}</strong></td>
+                                        <td>${data.guias}</td>
                                         <td>${data.pedidos}</td>
                                         <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
                                         <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'semana', '${semana}')">Ver</button></td>
@@ -2894,8 +2936,9 @@
                             <thead>
                                 <tr>
                                     <th>Mes</th>
+                                    <th>Guías</th>
                                     <th>Pedidos</th>
-                                    <th>Costo</th>
+                                    <th>Costo Devolución</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -2903,6 +2946,7 @@
                                 ${salidasMesArray.map(([mes, data]) => `
                                     <tr>
                                         <td><strong>${mes}</strong></td>
+                                        <td>${data.guias}</td>
                                         <td>${data.pedidos}</td>
                                         <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
                                         <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'mes', '${mes}')">Ver</button></td>
@@ -2923,7 +2967,8 @@
             if (tipo === 'ingreso') {
                 pedidos = filteredData.filter(o => o.estatus === 'ENTREGADO');
             } else {
-                pedidos = filteredData.filter(o => o.estatus === 'DEVOLUCION' || o.estatus === 'CANCELADO');
+                // Solo DEVOLUCION, no CANCELADO
+                pedidos = filteredData.filter(o => o.estatus === 'DEVOLUCION');
             }
 
             // Filter by date period
@@ -2972,7 +3017,7 @@
                                     <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">${o.producto || '-'}</td>
                                     <td>${formatCOP(o.total)}</td>
                                     <td style="color:${tipo === 'ingreso' ? 'var(--emerald)' : 'var(--red)'}">
-                                        ${tipo === 'ingreso' ? '+' : '-'}${formatCOP(tipo === 'ingreso' ? o.ganancia : ((o.costoDevolucion || 0) + (o.flete || 0)))}
+                                        ${tipo === 'ingreso' ? '+' : '-'}${formatCOP(tipo === 'ingreso' ? o.ganancia : (o.costoDevolucion || 0))}
                                     </td>
                                 </tr>
                             `).join('')}
@@ -2999,7 +3044,8 @@
         // Initialize billetera charts
         function initBilleteraCharts() {
             const entregados = filteredData.filter(o => o.estatus === 'ENTREGADO');
-            const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION' || o.estatus === 'CANCELADO');
+            // Solo DEVOLUCION, no CANCELADO
+            const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION');
 
             const ingresosPorDia = {};
             const salidasPorDia = {};
@@ -3015,12 +3061,25 @@
                 ingresosPorMes[mes] = (ingresosPorMes[mes] || 0) + o.ganancia;
             });
 
+            // Deduplicar por guía para no contar doble el costo de devolución
+            const guiasProcesadasChart = {};
             devoluciones.forEach(o => {
                 if (!o.fecha) return;
-                const fecha = new Date(o.fecha);
+                const guiaKey = o.guia || o.orderId;
+                if (!guiasProcesadasChart[guiaKey]) {
+                    guiasProcesadasChart[guiaKey] = {
+                        fecha: o.fecha,
+                        costoDevolucion: o.costoDevolucion || 0
+                    };
+                }
+            });
+
+            // Calcular salidas por día/mes usando guías únicas
+            Object.values(guiasProcesadasChart).forEach(g => {
+                const fecha = new Date(g.fecha);
                 const dia = fecha.toISOString().split('T')[0];
                 const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-                const costo = (o.costoDevolucion || 0) + (o.flete || 0);
+                const costo = g.costoDevolucion || 0;
                 salidasPorDia[dia] = (salidasPorDia[dia] || 0) + costo;
                 salidasPorMes[mes] = (salidasPorMes[mes] || 0) + costo;
             });
@@ -3884,9 +3943,19 @@
             const billeteraCtx = document.getElementById('billeteraChart');
             if (billeteraCtx) {
                 const entregados = filteredData.filter(o => o.estatus === 'ENTREGADO');
-                const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION' || o.estatus === 'CANCELADO');
+                // Solo DEVOLUCION, no CANCELADO
+                const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION');
                 const totalIngresos = entregados.reduce((s, o) => s + o.ganancia, 0);
-                const totalSalidas = devoluciones.reduce((s, o) => s + (o.costoDevolucion || 0) + (o.flete || 0), 0);
+
+                // Deduplicar por guía para no contar doble el costo de devolución
+                const guiasUnicasChart = {};
+                devoluciones.forEach(o => {
+                    const guiaKey = o.guia || o.orderId;
+                    if (!guiasUnicasChart[guiaKey]) {
+                        guiasUnicasChart[guiaKey] = o.costoDevolucion || 0;
+                    }
+                });
+                const totalSalidas = Object.values(guiasUnicasChart).reduce((s, c) => s + c, 0);
 
                 charts.billetera = new Chart(billeteraCtx, {
                     type: 'bar',
