@@ -81,8 +81,27 @@
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 1px solid var(--border);
+            position: relative;
         }
-        
+        .sidebar-close {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg-card);
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-close:hover { background: var(--red-bg); color: var(--red); }
+
         .logo-icon {
             width: 45px;
             height: 45px;
@@ -177,18 +196,46 @@
             padding-top: 20px;
             border-top: 1px solid var(--border);
         }
-        .sidebar-upload h3 { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar-upload h3 { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .upload-source {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border);
+        }
+        .upload-source-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .upload-source-icon { font-size: 20px; }
+        .upload-source-name { font-weight: 600; color: var(--text-primary); flex: 1; }
+        .upload-status {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+        }
+        .upload-status.loaded {
+            background: var(--emerald-bg);
+            color: var(--emerald);
+        }
         .upload-btn {
             width: 100%;
             padding: 12px;
-            background: var(--bg-card);
+            background: var(--bg-secondary);
             border: 2px dashed var(--border);
             border-radius: 10px;
             color: var(--text-secondary);
             cursor: pointer;
             transition: all 0.2s;
             font-size: 13px;
-            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         .upload-btn:hover { border-color: var(--emerald); color: var(--emerald); }
         .upload-btn.loaded { border-color: var(--emerald); background: var(--emerald-bg); color: var(--emerald); border-style: solid; }
@@ -198,16 +245,41 @@
         .delete-data-btn {
             width: 100%;
             padding: 10px;
-            background: var(--red-bg);
-            border: 1px solid var(--red);
+            background: transparent;
+            border: 1px solid var(--border);
             border-radius: 8px;
-            color: var(--red);
+            color: var(--text-muted);
             cursor: pointer;
             transition: all 0.2s;
             font-size: 12px;
-            margin-top: 8px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
-        .delete-data-btn:hover { background: var(--red); color: white; }
+        .delete-data-btn:hover { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+
+        /* Drag & Drop Upload Area */
+        .dropzone {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 50px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 25px;
+        }
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--emerald);
+            background: var(--emerald-bg);
+        }
+        .dropzone.dragover { transform: scale(1.02); }
+        .dropzone-icon { font-size: 48px; margin-bottom: 15px; opacity: 0.7; }
+        .dropzone-text { font-size: 16px; color: var(--text-primary); margin-bottom: 8px; }
+        .dropzone-subtext { font-size: 13px; color: var(--text-muted); }
+        .dropzone input { display: none; }
 
         /* Main Content */
         .main-content {
@@ -896,6 +968,7 @@
                     <h1>Bacano Store</h1>
                     <p>Dashboard PRO</p>
                 </div>
+                <button class="sidebar-close" onclick="toggleMobileMenu()" title="Cerrar menú">✕</button>
             </div>
 
             <!-- User Info -->
@@ -947,16 +1020,16 @@
                 <h3>Cargar Datos</h3>
                 <div class="upload-source">
                     <div class="upload-source-header">
-                        <span class="upload-source-icon dropi">📊</span>
+                        <span class="upload-source-icon">📊</span>
                         <span class="upload-source-name">Dropi</span>
                         <span class="upload-status" id="dropiStatus">Sin datos</span>
                     </div>
                     <label class="upload-btn" id="dropiUploadBtn">
                         <input type="file" accept=".xlsx,.xls" onchange="loadFile(this, 'dropi')">
-                        📁 Cargar Excel Dropi
+                        <span>📁</span> Cargar Excel
                     </label>
                     <button class="delete-data-btn" id="deleteDataBtn" onclick="clearDropiData()" style="display:none;">
-                        🗑️ Eliminar datos
+                        <span>🗑️</span> Eliminar datos
                     </button>
                 </div>
             </div>
@@ -974,7 +1047,7 @@
                 </div>
                 <div class="header-actions">
                     <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle" title="Cambiar tema">🌙</button>
-                    <button class="btn btn-secondary" onclick="showPDFPreview()">
+                    <button class="btn btn-secondary" onclick="exportPDF()">
                         📄 Exportar PDF
                     </button>
                     <button class="btn btn-primary" onclick="refreshData()">
@@ -1034,15 +1107,14 @@
             <!-- Content Area -->
             <div id="content">
                 <div class="empty-state">
-                    <div class="icon">📁</div>
-                    <h3>Carga tus datos para comenzar</h3>
-                    <p>Sube tu archivo de Dropi desde el panel lateral para ver tus KPIs</p>
-                    <div style="display:flex;gap:15px;justify-content:center;margin-top:20px">
-                        <div style="background:var(--bg-secondary);padding:20px;border-radius:12px;text-align:center;border:1px solid var(--border)">
-                            <div style="font-size:32px;margin-bottom:10px">📊</div>
-                            <strong style="color:var(--emerald)">Dropi</strong>
-                            <p style="font-size:12px;color:var(--text-muted);margin-top:5px">Reportes de pedidos</p>
-                        </div>
+                    <div class="icon">📊</div>
+                    <h3>Carga tus datos de Dropi</h3>
+                    <p>Arrastra y suelta tu archivo Excel o haz clic para seleccionarlo</p>
+                    <div class="dropzone" id="mainDropzone" onclick="document.getElementById('mainFileInput').click()">
+                        <input type="file" id="mainFileInput" accept=".xlsx,.xls" onchange="loadFile(this, 'dropi')">
+                        <div class="dropzone-icon">📁</div>
+                        <div class="dropzone-text">Arrastra tu archivo Excel aquí</div>
+                        <div class="dropzone-subtext">o haz clic para seleccionar (.xlsx, .xls)</div>
                     </div>
                 </div>
             </div>
@@ -1319,6 +1391,87 @@
 
         // Run init when DOM is ready
         document.addEventListener('DOMContentLoaded', init);
+
+        // Setup drag and drop after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDropzone();
+        });
+
+        function setupDropzone() {
+            const dropzone = document.getElementById('mainDropzone');
+            if (!dropzone) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+            });
+
+            dropzone.addEventListener('drop', handleDrop, false);
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    loadDroppedFile(file);
+                } else {
+                    alert('Por favor, sube un archivo Excel (.xlsx o .xls)');
+                }
+            }
+        }
+
+        function loadDroppedFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+                    const data = XLSX.utils.sheet_to_json(sheet);
+
+                    dropiData = processDropiData(data);
+                    filteredData = [...dropiData.orders];
+
+                    // Update UI
+                    const status = document.getElementById('dropiStatus');
+                    const uploadBtn = document.getElementById('dropiUploadBtn');
+                    const deleteBtn = document.getElementById('deleteDataBtn');
+
+                    if (status) {
+                        status.textContent = dropiData.orders.length + ' registros';
+                        status.classList.add('loaded');
+                    }
+                    if (uploadBtn) uploadBtn.classList.add('loaded');
+                    if (deleteBtn) deleteBtn.style.display = 'flex';
+
+                    // Save to localStorage
+                    saveToLocalStorage();
+
+                    populateFilters();
+                    renderContent();
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al procesar el archivo');
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
 
         // Load file
         function loadFile(input, type) {
@@ -1657,7 +1810,13 @@
                     <div class="empty-state">
                         <div class="icon">📊</div>
                         <h3>Carga tus datos de Dropi</h3>
-                        <p>Sube tu archivo Excel de Dropi para ver el análisis completo</p>
+                        <p>Arrastra y suelta tu archivo Excel o haz clic para seleccionarlo</p>
+                        <div class="dropzone" id="mainDropzone" onclick="document.getElementById('mainFileInput').click()">
+                            <input type="file" id="mainFileInput" accept=".xlsx,.xls" onchange="loadFile(this, 'dropi')">
+                            <div class="dropzone-icon">📁</div>
+                            <div class="dropzone-text">Arrastra tu archivo Excel aquí</div>
+                            <div class="dropzone-subtext">o haz clic para seleccionar (.xlsx, .xls)</div>
+                        </div>
                     </div>
                 `;
                 document.getElementById('content').innerHTML = html;
@@ -2602,7 +2761,7 @@
                                         <td>${data.pedidos}</td>
                                         <td>${formatCOP(data.ventas)}</td>
                                         <td><strong style="color:var(--emerald)">+${formatCOP(data.ganancia)}</strong></td>
-                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'dia', '${fecha}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'dia', '${fecha}')">Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2630,7 +2789,7 @@
                                         <td><strong>${fecha}</strong></td>
                                         <td>${data.pedidos}</td>
                                         <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
-                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'dia', '${fecha}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'dia', '${fecha}')">Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2660,7 +2819,7 @@
                                         <td>${data.pedidos}</td>
                                         <td>${formatCOP(data.ventas)}</td>
                                         <td><strong style="color:var(--emerald)">+${formatCOP(data.ganancia)}</strong></td>
-                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'semana', '${semana}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'semana', '${semana}')">Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2688,7 +2847,7 @@
                                         <td><strong>${semana}</strong></td>
                                         <td>${data.pedidos}</td>
                                         <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
-                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'semana', '${semana}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'semana', '${semana}')">Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2718,7 +2877,7 @@
                                         <td>${data.pedidos}</td>
                                         <td>${formatCOP(data.ventas)}</td>
                                         <td><strong style="color:var(--emerald)">+${formatCOP(data.ganancia)}</strong></td>
-                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'mes', '${mes}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'mes', '${mes}')">Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2746,7 +2905,7 @@
                                         <td><strong>${mes}</strong></td>
                                         <td>${data.pedidos}</td>
                                         <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
-                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'mes', '${mes}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'mes', '${mes}')">Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2757,8 +2916,32 @@
         }
 
         // Show billetera detail modal
-        function showBilleteraDetail(tipo, periodo, fecha, ids) {
-            const pedidos = filteredData.filter(o => ids.includes(o.id));
+        function showBilleteraDetail(tipo, periodo, fecha) {
+            // Filter orders based on type and date
+            let pedidos = [];
+
+            if (tipo === 'ingreso') {
+                pedidos = filteredData.filter(o => o.estatus === 'ENTREGADO');
+            } else {
+                pedidos = filteredData.filter(o => o.estatus === 'DEVOLUCION' || o.estatus === 'CANCELADO');
+            }
+
+            // Filter by date period
+            pedidos = pedidos.filter(o => {
+                if (!o.fecha) return false;
+                const orderDate = new Date(o.fecha);
+
+                if (periodo === 'dia') {
+                    return orderDate.toISOString().split('T')[0] === fecha;
+                } else if (periodo === 'semana') {
+                    return getWeekNumber(orderDate) === fecha;
+                } else if (periodo === 'mes') {
+                    const mes = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+                    return mes === fecha;
+                }
+                return false;
+            });
+
             const tipoText = tipo === 'ingreso' ? 'Ingresos' : 'Devoluciones';
             const periodoText = periodo === 'dia' ? 'del día' : periodo === 'semana' ? 'de la semana' : 'del mes';
 
@@ -3639,21 +3822,42 @@
 
             // Top Products Chart (for Resumen General)
             const topProductsCtx = document.getElementById('topProductsChart');
-            if (topProductsCtx) {
-                const prodData = Object.entries(stats.porProducto).sort((a, b) => b[1].total - a[1].total).slice(0, 10);
-                charts.topProducts = new Chart(topProductsCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: prodData.map(p => p[0].length > 20 ? p[0].substring(0, 20) + '...' : p[0]),
-                        datasets: [{
-                            label: 'Pedidos',
-                            data: prodData.map(p => p[1].total),
-                            backgroundColor: '#8B5CF6',
-                            borderRadius: 6
-                        }]
-                    },
-                    options: { ...chartOptions, indexAxis: 'y', plugins: { legend: { display: false } } }
-                });
+            if (topProductsCtx && stats.porProducto) {
+                const prodData = Object.entries(stats.porProducto)
+                    .filter(([name, data]) => name && data && data.total > 0)
+                    .sort((a, b) => b[1].total - a[1].total)
+                    .slice(0, 10);
+
+                if (prodData.length > 0) {
+                    charts.topProducts = new Chart(topProductsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: prodData.map(p => p[0].length > 15 ? p[0].substring(0, 15) + '...' : p[0]),
+                            datasets: [{
+                                label: 'Cantidad vendida',
+                                data: prodData.map(p => p[1].total),
+                                backgroundColor: ['#8B5CF6', '#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'],
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            ...chartOptions,
+                            indexAxis: 'y',
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { color: '#9ca3af', stepSize: 1 }
+                                },
+                                y: {
+                                    grid: { display: false },
+                                    ticks: { color: '#9ca3af', font: { size: 10 } }
+                                }
+                            }
+                        }
+                    });
+                }
             }
 
             // Novedades Chart (Solucionadas vs Pendientes)
