@@ -933,8 +933,8 @@
                     <li class="nav-item" onclick="showTab('transportadoras')">
                         <span class="icon">🚛</span> Transportadoras
                     </li>
-                    <li class="nav-item" onclick="showTab('ganancias')">
-                        <span class="icon">💵</span> Ganancias
+                    <li class="nav-item" onclick="showTab('billetera')">
+                        <span class="icon">💵</span> Billetera
                     </li>
                     <li class="nav-item" onclick="showTab('rentabilidad')">
                         <span class="icon">💰</span> Rentabilidad
@@ -1637,7 +1637,7 @@
                 productos: ['Análisis de Productos', 'Rendimiento por producto'],
                 ciudades: ['Análisis por Ciudad', 'Rendimiento por ubicación'],
                 transportadoras: ['Transportadoras', 'Efectividad por transportadora'],
-                ganancias: ['Ganancias', 'Análisis de ganancias por período'],
+                billetera: ['Billetera', 'Ingresos y salidas de dinero'],
                 rentabilidad: ['Rentabilidad', 'Análisis financiero detallado']
             };
 
@@ -1688,8 +1688,8 @@
                 case 'transportadoras':
                     html = renderTransportadoras(stats);
                     break;
-                case 'ganancias':
-                    html = renderGanancias(stats);
+                case 'billetera':
+                    html = renderBilletera(stats);
                     break;
                 case 'rentabilidad':
                     html = renderRentabilidad(stats);
@@ -1701,8 +1701,8 @@
             // Initialize charts after DOM update
             setTimeout(() => {
                 initCharts(stats);
-                if (currentTab === 'ganancias') {
-                    initGananciasCharts();
+                if (currentTab === 'billetera') {
+                    initBilleteraCharts();
                 }
             }, 100);
         }
@@ -1810,7 +1810,45 @@
                         </div>
                     </div>
                 </div>
-                
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">🛍️ Top 10 Productos Más Vendidos</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="topProductsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">⚠️ Novedades (Solucionadas vs Pendientes)</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="novedadesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">💵 Billetera (Ingresos vs Salidas)</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="billeteraChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span class="chart-title">📈 Rentabilidad por Mes</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="rentabilidadChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="charts-grid">
                     <div class="chart-card full-width">
                         <div class="chart-header">
@@ -2264,6 +2302,8 @@
             const pageData = pedidosConNovedad.slice(startIdx, endIdx);
             const totalPages = Math.ceil(pedidosConNovedad.length / itemsPerPage);
 
+            const efectividad = pedidosConNovedad.length > 0 ? (novedadesSolucionadas.length / pedidosConNovedad.length * 100).toFixed(1) : 0;
+
             return `
                 <div class="kpi-grid">
                     <div class="kpi-card amber">
@@ -2282,7 +2322,13 @@
                         <div class="kpi-icon">✅</div>
                         <div class="kpi-label">Solucionadas</div>
                         <div class="kpi-value">${formatNumber(novedadesSolucionadas.length)}</div>
-                        <div class="kpi-subtitle">${pedidosConNovedad.length > 0 ? (novedadesSolucionadas.length / pedidosConNovedad.length * 100).toFixed(1) : 0}% resueltas</div>
+                        <div class="kpi-subtitle">${efectividad}% resueltas</div>
+                    </div>
+                    <div class="kpi-card ${Number(efectividad) >= 70 ? 'emerald' : Number(efectividad) >= 50 ? 'amber' : 'red'}">
+                        <div class="kpi-icon">🎯</div>
+                        <div class="kpi-label">Efectividad de Solución</div>
+                        <div class="kpi-value">${efectividad}%</div>
+                        <div class="kpi-subtitle">${Number(efectividad) >= 70 ? 'Excelente' : Number(efectividad) >= 50 ? 'Regular' : 'Necesita mejorar'}</div>
                     </div>
                     <div class="kpi-card blue">
                         <div class="kpi-icon">💰</div>
@@ -2418,123 +2464,145 @@
             });
         }
 
-        // Render Ganancias
-        function renderGanancias(stats) {
-            // Agrupar por día
-            const porDia = {};
-            const porSemana = {};
-            const porMes = {};
+        // Render Billetera (formerly Ganancias)
+        function renderBilletera(stats) {
+            // Ingresos (entregados)
+            const ingresosPorDia = {};
+            const ingresosPorSemana = {};
+            const ingresosPorMes = {};
 
-            filteredData.filter(o => o.estatus === 'ENTREGADO').forEach(o => {
+            // Salidas (devoluciones)
+            const salidasPorDia = {};
+            const salidasPorSemana = {};
+            const salidasPorMes = {};
+
+            const entregados = filteredData.filter(o => o.estatus === 'ENTREGADO');
+            const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION' || o.estatus === 'CANCELADO');
+
+            // Procesar ingresos
+            entregados.forEach(o => {
                 if (!o.fecha) return;
                 const fecha = new Date(o.fecha);
                 const dia = fecha.toISOString().split('T')[0];
                 const semana = getWeekNumber(fecha);
                 const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
 
-                if (!porDia[dia]) porDia[dia] = { ventas: 0, ganancia: 0, flete: 0, devFlete: 0, comision: 0, costoProveedor: 0, pedidos: 0 };
-                if (!porSemana[semana]) porSemana[semana] = { ventas: 0, ganancia: 0, flete: 0, devFlete: 0, comision: 0, costoProveedor: 0, pedidos: 0 };
-                if (!porMes[mes]) porMes[mes] = { ventas: 0, ganancia: 0, flete: 0, devFlete: 0, comision: 0, costoProveedor: 0, pedidos: 0 };
+                if (!ingresosPorDia[dia]) ingresosPorDia[dia] = { ventas: 0, ganancia: 0, pedidos: 0, ids: [] };
+                if (!ingresosPorSemana[semana]) ingresosPorSemana[semana] = { ventas: 0, ganancia: 0, pedidos: 0, ids: [] };
+                if (!ingresosPorMes[mes]) ingresosPorMes[mes] = { ventas: 0, ganancia: 0, pedidos: 0, ids: [] };
 
-                [porDia[dia], porSemana[semana], porMes[mes]].forEach(g => {
+                [ingresosPorDia[dia], ingresosPorSemana[semana], ingresosPorMes[mes]].forEach(g => {
                     g.ventas += o.total;
                     g.ganancia += o.ganancia;
-                    g.flete += o.flete;
-                    g.devFlete += o.costoDevolucion;
-                    g.comision += o.comision;
-                    g.costoProveedor += o.costoProveedor;
                     g.pedidos++;
+                    g.ids.push(o.id);
                 });
             });
 
-            const diasArray = Object.entries(porDia).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
-            const semanasArray = Object.entries(porSemana).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
-            const mesesArray = Object.entries(porMes).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+            // Procesar salidas (devoluciones)
+            devoluciones.forEach(o => {
+                if (!o.fecha) return;
+                const fecha = new Date(o.fecha);
+                const dia = fecha.toISOString().split('T')[0];
+                const semana = getWeekNumber(fecha);
+                const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
 
-            const totalGanancia = stats.gananciaTotal;
-            const totalFlete = filteredData.filter(o => o.estatus === 'ENTREGADO').reduce((s, o) => s + o.flete, 0);
-            const totalComision = filteredData.filter(o => o.estatus === 'ENTREGADO').reduce((s, o) => s + o.comision, 0);
-            const totalCostoProveedor = filteredData.filter(o => o.estatus === 'ENTREGADO').reduce((s, o) => s + o.costoProveedor, 0);
+                const costoDevolucion = (o.costoDevolucion || 0) + (o.flete || 0);
+
+                if (!salidasPorDia[dia]) salidasPorDia[dia] = { monto: 0, pedidos: 0, ids: [] };
+                if (!salidasPorSemana[semana]) salidasPorSemana[semana] = { monto: 0, pedidos: 0, ids: [] };
+                if (!salidasPorMes[mes]) salidasPorMes[mes] = { monto: 0, pedidos: 0, ids: [] };
+
+                [salidasPorDia[dia], salidasPorSemana[semana], salidasPorMes[mes]].forEach(g => {
+                    g.monto += costoDevolucion;
+                    g.pedidos++;
+                    g.ids.push(o.id);
+                });
+            });
+
+            const ingresosDiaArray = Object.entries(ingresosPorDia).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
+            const ingresosSemanaArray = Object.entries(ingresosPorSemana).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+            const ingresosMesArray = Object.entries(ingresosPorMes).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+
+            const salidasDiaArray = Object.entries(salidasPorDia).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 30);
+            const salidasSemanaArray = Object.entries(salidasPorSemana).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+            const salidasMesArray = Object.entries(salidasPorMes).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
+
+            const totalIngresos = entregados.reduce((s, o) => s + o.ganancia, 0);
+            const totalVentas = entregados.reduce((s, o) => s + o.total, 0);
+            const totalSalidas = devoluciones.reduce((s, o) => s + (o.costoDevolucion || 0) + (o.flete || 0), 0);
+            const balance = totalIngresos - totalSalidas;
 
             return `
                 <div class="kpi-grid">
                     <div class="kpi-card emerald">
-                        <div class="kpi-icon">💵</div>
-                        <div class="kpi-label">Ganancia Total</div>
-                        <div class="kpi-value">${formatCOP(totalGanancia)}</div>
-                        <div class="kpi-subtitle">Solo pedidos entregados</div>
+                        <div class="kpi-icon">📥</div>
+                        <div class="kpi-label">Total Ingresos</div>
+                        <div class="kpi-value">${formatCOP(totalIngresos)}</div>
+                        <div class="kpi-subtitle">${formatNumber(entregados.length)} pedidos entregados</div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-icon">📤</div>
+                        <div class="kpi-label">Total Salidas</div>
+                        <div class="kpi-value">${formatCOP(totalSalidas)}</div>
+                        <div class="kpi-subtitle">${formatNumber(devoluciones.length)} devoluciones</div>
+                    </div>
+                    <div class="kpi-card ${balance >= 0 ? 'emerald' : 'red'}">
+                        <div class="kpi-icon">💰</div>
+                        <div class="kpi-label">Balance Neto</div>
+                        <div class="kpi-value">${formatCOP(balance)}</div>
+                        <div class="kpi-subtitle">${balance >= 0 ? 'Positivo' : 'Negativo'}</div>
                     </div>
                     <div class="kpi-card blue">
-                        <div class="kpi-icon">🚚</div>
-                        <div class="kpi-label">Total Fletes</div>
-                        <div class="kpi-value">${formatCOP(totalFlete)}</div>
-                        <div class="kpi-subtitle">Costo de envíos</div>
+                        <div class="kpi-icon">🛒</div>
+                        <div class="kpi-label">Ventas Totales</div>
+                        <div class="kpi-value">${formatCOP(totalVentas)}</div>
+                        <div class="kpi-subtitle">Valor bruto</div>
                     </div>
-                    <div class="kpi-card violet">
-                        <div class="kpi-icon">💼</div>
-                        <div class="kpi-label">Comisiones</div>
-                        <div class="kpi-value">${formatCOP(totalComision)}</div>
-                        <div class="kpi-subtitle">Total comisiones</div>
-                    </div>
-                    <div class="kpi-card amber">
-                        <div class="kpi-icon">📦</div>
-                        <div class="kpi-label">Costo Proveedor</div>
-                        <div class="kpi-value">${formatCOP(totalCostoProveedor)}</div>
-                        <div class="kpi-subtitle">Costo de productos</div>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;">
-                    <input type="text" class="table-search" placeholder="🔍 Buscar por Guía..." oninput="searchGananciaByField('guia', this.value)" style="min-width:150px;">
-                    <input type="text" class="table-search" placeholder="📱 Buscar por Teléfono..." oninput="searchGananciaByField('telefono', this.value)" style="min-width:150px;">
                 </div>
 
                 <div class="charts-grid" style="margin-bottom:20px;">
                     <div class="chart-card">
                         <div class="chart-header">
-                            <span class="chart-title">📈 Ganancias por Día (Últimos 30 días)</span>
+                            <span class="chart-title">📈 Ingresos vs Salidas por Mes</span>
                         </div>
                         <div class="chart-wrapper">
-                            <canvas id="gananciaDiaChart"></canvas>
+                            <canvas id="billeteraMesChart"></canvas>
                         </div>
                     </div>
                     <div class="chart-card">
                         <div class="chart-header">
-                            <span class="chart-title">📊 Ganancias por Mes</span>
+                            <span class="chart-title">📊 Balance por Día (Últimos 30 días)</span>
                         </div>
                         <div class="chart-wrapper">
-                            <canvas id="gananciaMesChart"></canvas>
+                            <canvas id="billeteraDiaChart"></canvas>
                         </div>
                     </div>
                 </div>
 
                 <div class="table-container" style="margin-bottom:20px;">
                     <div class="table-header">
-                        <div class="table-title">📅 Ganancias por Día</div>
+                        <div class="table-title">📥 Ingresos por Día <span class="table-badge" style="background:var(--emerald-bg);color:var(--emerald);">Entregados</span></div>
                     </div>
-                    <div style="overflow-x:auto;max-height:400px;">
-                        <table class="data-table">
+                    <div class="table-responsive" style="max-height:350px;">
+                        <table class="data-table table-auto-scale">
                             <thead style="position:sticky;top:0;background:var(--bg-card);">
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Pedidos</th>
                                     <th>Ventas</th>
-                                    <th>Costo Proveedor</th>
-                                    <th>Flete</th>
-                                    <th>Comisión</th>
                                     <th>Ganancia</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${diasArray.map(([fecha, data]) => `
+                                ${ingresosDiaArray.map(([fecha, data]) => `
                                     <tr>
                                         <td><strong>${fecha}</strong></td>
                                         <td>${data.pedidos}</td>
                                         <td>${formatCOP(data.ventas)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.costoProveedor)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.flete)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.comision)}</td>
-                                        <td><strong style="color:var(--emerald)">${formatCOP(data.ganancia)}</strong></td>
+                                        <td><strong style="color:var(--emerald)">+${formatCOP(data.ganancia)}</strong></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'dia', '${fecha}', [${data.ids.join(',')}])">👁️ Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2544,31 +2612,113 @@
 
                 <div class="table-container" style="margin-bottom:20px;">
                     <div class="table-header">
-                        <div class="table-title">📆 Ganancias por Semana</div>
+                        <div class="table-title">📤 Devoluciones por Día <span class="table-badge" style="background:var(--red-bg);color:var(--red);">Salidas</span></div>
                     </div>
-                    <div style="overflow-x:auto;">
-                        <table class="data-table">
+                    <div class="table-responsive" style="max-height:350px;">
+                        <table class="data-table table-auto-scale">
+                            <thead style="position:sticky;top:0;background:var(--bg-card);">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Pedidos</th>
+                                    <th>Costo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${salidasDiaArray.map(([fecha, data]) => `
+                                    <tr>
+                                        <td><strong>${fecha}</strong></td>
+                                        <td>${data.pedidos}</td>
+                                        <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'dia', '${fecha}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">📅 Ingresos por Semana</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table table-auto-scale">
                             <thead>
                                 <tr>
                                     <th>Semana</th>
                                     <th>Pedidos</th>
                                     <th>Ventas</th>
-                                    <th>Costo Proveedor</th>
-                                    <th>Flete</th>
-                                    <th>Comisión</th>
                                     <th>Ganancia</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${semanasArray.map(([semana, data]) => `
+                                ${ingresosSemanaArray.map(([semana, data]) => `
                                     <tr>
                                         <td><strong>${semana}</strong></td>
                                         <td>${data.pedidos}</td>
                                         <td>${formatCOP(data.ventas)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.costoProveedor)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.flete)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.comision)}</td>
-                                        <td><strong style="color:var(--emerald)">${formatCOP(data.ganancia)}</strong></td>
+                                        <td><strong style="color:var(--emerald)">+${formatCOP(data.ganancia)}</strong></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'semana', '${semana}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">📆 Devoluciones por Semana</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table table-auto-scale">
+                            <thead>
+                                <tr>
+                                    <th>Semana</th>
+                                    <th>Pedidos</th>
+                                    <th>Costo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${salidasSemanaArray.map(([semana, data]) => `
+                                    <tr>
+                                        <td><strong>${semana}</strong></td>
+                                        <td>${data.pedidos}</td>
+                                        <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'semana', '${semana}', [${data.ids.join(',')}])">👁️ Ver</button></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom:20px;">
+                    <div class="table-header">
+                        <div class="table-title">📊 Ingresos por Mes</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table table-auto-scale">
+                            <thead>
+                                <tr>
+                                    <th>Mes</th>
+                                    <th>Pedidos</th>
+                                    <th>Ventas</th>
+                                    <th>Ganancia</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ingresosMesArray.map(([mes, data]) => `
+                                    <tr>
+                                        <td><strong>${mes}</strong></td>
+                                        <td>${data.pedidos}</td>
+                                        <td>${formatCOP(data.ventas)}</td>
+                                        <td><strong style="color:var(--emerald)">+${formatCOP(data.ganancia)}</strong></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('ingreso', 'mes', '${mes}', [${data.ids.join(',')}])">👁️ Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2578,31 +2728,25 @@
 
                 <div class="table-container">
                     <div class="table-header">
-                        <div class="table-title">📊 Ganancias por Mes</div>
+                        <div class="table-title">📉 Devoluciones por Mes</div>
                     </div>
-                    <div style="overflow-x:auto;">
-                        <table class="data-table">
+                    <div class="table-responsive">
+                        <table class="data-table table-auto-scale">
                             <thead>
                                 <tr>
                                     <th>Mes</th>
                                     <th>Pedidos</th>
-                                    <th>Ventas</th>
-                                    <th>Costo Proveedor</th>
-                                    <th>Flete</th>
-                                    <th>Comisión</th>
-                                    <th>Ganancia</th>
+                                    <th>Costo</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${mesesArray.map(([mes, data]) => `
+                                ${salidasMesArray.map(([mes, data]) => `
                                     <tr>
                                         <td><strong>${mes}</strong></td>
                                         <td>${data.pedidos}</td>
-                                        <td>${formatCOP(data.ventas)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.costoProveedor)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.flete)}</td>
-                                        <td style="color:var(--text-muted)">-${formatCOP(data.comision)}</td>
-                                        <td><strong style="color:var(--emerald)">${formatCOP(data.ganancia)}</strong></td>
+                                        <td><strong style="color:var(--red)">-${formatCOP(data.monto)}</strong></td>
+                                        <td><button class="btn btn-sm btn-secondary" onclick="showBilleteraDetail('salida', 'mes', '${mes}', [${data.ids.join(',')}])">👁️ Ver</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2610,6 +2754,53 @@
                     </div>
                 </div>
             `;
+        }
+
+        // Show billetera detail modal
+        function showBilleteraDetail(tipo, periodo, fecha, ids) {
+            const pedidos = filteredData.filter(o => ids.includes(o.id));
+            const tipoText = tipo === 'ingreso' ? 'Ingresos' : 'Devoluciones';
+            const periodoText = periodo === 'dia' ? 'del día' : periodo === 'semana' ? 'de la semana' : 'del mes';
+
+            const html = `
+                <div style="margin-bottom:15px;">
+                    <p><strong>Período:</strong> ${fecha}</p>
+                    <p><strong>Total pedidos:</strong> ${pedidos.length}</p>
+                    <p><strong>Tipo:</strong> ${tipoText}</p>
+                </div>
+                <div style="overflow-x:auto;max-height:400px;">
+                    <table class="data-table table-auto-scale">
+                        <thead style="position:sticky;top:0;background:var(--bg-card);">
+                            <tr>
+                                <th>ID</th>
+                                <th>Guía</th>
+                                <th>Cliente</th>
+                                <th>Producto</th>
+                                <th>Total</th>
+                                <th>${tipo === 'ingreso' ? 'Ganancia' : 'Costo'}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${pedidos.map(o => `
+                                <tr>
+                                    <td><strong>${o.orderId}</strong></td>
+                                    <td style="font-family:monospace;font-size:11px;">${o.guia || '-'}</td>
+                                    <td>${o.cliente || '-'}</td>
+                                    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">${o.producto || '-'}</td>
+                                    <td>${formatCOP(o.total)}</td>
+                                    <td style="color:${tipo === 'ingreso' ? 'var(--emerald)' : 'var(--red)'}">
+                                        ${tipo === 'ingreso' ? '+' : '-'}${formatCOP(tipo === 'ingreso' ? o.ganancia : ((o.costoDevolucion || 0) + (o.flete || 0)))}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('modalTitle').textContent = `${tipoText} ${periodoText} ${fecha}`;
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('modalOverlay').classList.add('open');
         }
 
         // Get week number helper
@@ -2622,65 +2813,61 @@
             return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
         }
 
-        // Search ganancias by field
-        function searchGananciaByField(field, query) {
-            if (!dropiData) return;
-            query = query.toLowerCase().trim();
-            if (!query) {
-                filteredData = [...dropiData.orders];
-            } else {
-                filteredData = dropiData.orders.filter(o =>
-                    (o[field] || '').toLowerCase().includes(query)
-                );
-            }
-            currentPage = 1;
-            const stats = calculateStats(filteredData);
-            document.getElementById('content').innerHTML = renderGanancias(stats);
-            setTimeout(() => initGananciasCharts(), 100);
-        }
-
-        // Initialize ganancias charts
-        function initGananciasCharts() {
+        // Initialize billetera charts
+        function initBilleteraCharts() {
             const entregados = filteredData.filter(o => o.estatus === 'ENTREGADO');
-            const porDia = {};
-            const porMes = {};
+            const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION' || o.estatus === 'CANCELADO');
+
+            const ingresosPorDia = {};
+            const salidasPorDia = {};
+            const ingresosPorMes = {};
+            const salidasPorMes = {};
 
             entregados.forEach(o => {
                 if (!o.fecha) return;
                 const fecha = new Date(o.fecha);
                 const dia = fecha.toISOString().split('T')[0];
                 const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-
-                if (!porDia[dia]) porDia[dia] = 0;
-                if (!porMes[mes]) porMes[mes] = 0;
-                porDia[dia] += o.ganancia;
-                porMes[mes] += o.ganancia;
+                ingresosPorDia[dia] = (ingresosPorDia[dia] || 0) + o.ganancia;
+                ingresosPorMes[mes] = (ingresosPorMes[mes] || 0) + o.ganancia;
             });
 
-            const diasArray = Object.entries(porDia).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
-            const mesesArray = Object.entries(porMes).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
+            devoluciones.forEach(o => {
+                if (!o.fecha) return;
+                const fecha = new Date(o.fecha);
+                const dia = fecha.toISOString().split('T')[0];
+                const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+                const costo = (o.costoDevolucion || 0) + (o.flete || 0);
+                salidasPorDia[dia] = (salidasPorDia[dia] || 0) + costo;
+                salidasPorMes[mes] = (salidasPorMes[mes] || 0) + costo;
+            });
+
+            // Combinar días y calcular balance
+            const allDays = [...new Set([...Object.keys(ingresosPorDia), ...Object.keys(salidasPorDia)])].sort().slice(-30);
+            const allMonths = [...new Set([...Object.keys(ingresosPorMes), ...Object.keys(salidasPorMes)])].sort().slice(-12);
 
             const chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { labels: { color: '#9ca3af' } } },
                 scales: {
                     y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
                     x: { grid: { display: false }, ticks: { color: '#9ca3af', maxRotation: 45 } }
                 }
             };
 
-            // Ganancia por día
-            const ctxDia = document.getElementById('gananciaDiaChart');
+            // Balance por día
+            const ctxDia = document.getElementById('billeteraDiaChart');
             if (ctxDia) {
-                if (charts.gananciaDia) charts.gananciaDia.destroy();
-                charts.gananciaDia = new Chart(ctxDia, {
+                if (charts.billeteraDia) charts.billeteraDia.destroy();
+                charts.billeteraDia = new Chart(ctxDia, {
                     type: 'bar',
                     data: {
-                        labels: diasArray.map(d => d[0].substring(5)),
+                        labels: allDays.map(d => d.substring(5)),
                         datasets: [{
-                            data: diasArray.map(d => d[1]),
-                            backgroundColor: '#10B981',
+                            label: 'Balance',
+                            data: allDays.map(d => (ingresosPorDia[d] || 0) - (salidasPorDia[d] || 0)),
+                            backgroundColor: allDays.map(d => (ingresosPorDia[d] || 0) - (salidasPorDia[d] || 0) >= 0 ? '#10B981' : '#EF4444'),
                             borderRadius: 4
                         }]
                     },
@@ -2688,21 +2875,28 @@
                 });
             }
 
-            // Ganancia por mes
-            const ctxMes = document.getElementById('gananciaMesChart');
+            // Ingresos vs Salidas por mes
+            const ctxMes = document.getElementById('billeteraMesChart');
             if (ctxMes) {
-                if (charts.gananciaMes) charts.gananciaMes.destroy();
-                charts.gananciaMes = new Chart(ctxMes, {
-                    type: 'line',
+                if (charts.billeteraMes) charts.billeteraMes.destroy();
+                charts.billeteraMes = new Chart(ctxMes, {
+                    type: 'bar',
                     data: {
-                        labels: mesesArray.map(m => m[0]),
-                        datasets: [{
-                            data: mesesArray.map(m => m[1]),
-                            borderColor: '#10B981',
-                            backgroundColor: 'rgba(16,185,129,0.2)',
-                            fill: true,
-                            tension: 0.3
-                        }]
+                        labels: allMonths,
+                        datasets: [
+                            {
+                                label: 'Ingresos',
+                                data: allMonths.map(m => ingresosPorMes[m] || 0),
+                                backgroundColor: '#10B981',
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'Salidas',
+                                data: allMonths.map(m => salidasPorMes[m] || 0),
+                                backgroundColor: '#EF4444',
+                                borderRadius: 4
+                            }
+                        ]
                     },
                     options: chartOptions
                 });
@@ -2799,8 +2993,8 @@
                 case 'novedades':
                     html = renderNovedades(stats);
                     break;
-                case 'ganancias':
-                    html = renderGanancias(stats);
+                case 'billetera':
+                    html = renderBilletera(stats);
                     break;
             }
             document.getElementById('content').innerHTML = html;
@@ -3225,7 +3419,7 @@
             }
 
             // Clone current content
-            const contentArea = document.getElementById('contentArea');
+            const contentArea = document.getElementById('content');
             if (contentArea) {
                 content += contentArea.innerHTML;
             }
@@ -3253,7 +3447,7 @@
                 productos: 'Productos',
                 ciudades: 'Ciudades',
                 transportadoras: 'Transportadoras',
-                ganancias: 'Ganancias',
+                billetera: 'Billetera',
                 rentabilidad: 'Rentabilidad'
             };
 
@@ -3440,6 +3634,109 @@
                         }]
                     },
                     options: { ...chartOptions, plugins: { legend: { display: false } } }
+                });
+            }
+
+            // Top Products Chart (for Resumen General)
+            const topProductsCtx = document.getElementById('topProductsChart');
+            if (topProductsCtx) {
+                const prodData = Object.entries(stats.porProducto).sort((a, b) => b[1].total - a[1].total).slice(0, 10);
+                charts.topProducts = new Chart(topProductsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: prodData.map(p => p[0].length > 20 ? p[0].substring(0, 20) + '...' : p[0]),
+                        datasets: [{
+                            label: 'Pedidos',
+                            data: prodData.map(p => p[1].total),
+                            backgroundColor: '#8B5CF6',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { ...chartOptions, indexAxis: 'y', plugins: { legend: { display: false } } }
+                });
+            }
+
+            // Novedades Chart (Solucionadas vs Pendientes)
+            const novedadesCtx = document.getElementById('novedadesChart');
+            if (novedadesCtx) {
+                const pedidosConNovedad = filteredData.filter(o => o.novedad && o.novedad.trim() !== '');
+                const solucionadas = pedidosConNovedad.filter(o => o.novedadSolucionada && o.novedadSolucionada.toLowerCase().includes('si')).length;
+                const pendientes = pedidosConNovedad.length - solucionadas;
+
+                charts.novedades = new Chart(novedadesCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Solucionadas', 'Pendientes'],
+                        datasets: [{
+                            data: [solucionadas, pendientes],
+                            backgroundColor: ['#10B981', '#EF4444']
+                        }]
+                    },
+                    options: { ...chartOptions, scales: {} }
+                });
+            }
+
+            // Billetera Chart (Ingresos vs Salidas)
+            const billeteraCtx = document.getElementById('billeteraChart');
+            if (billeteraCtx) {
+                const entregados = filteredData.filter(o => o.estatus === 'ENTREGADO');
+                const devoluciones = filteredData.filter(o => o.estatus === 'DEVOLUCION' || o.estatus === 'CANCELADO');
+                const totalIngresos = entregados.reduce((s, o) => s + o.ganancia, 0);
+                const totalSalidas = devoluciones.reduce((s, o) => s + (o.costoDevolucion || 0) + (o.flete || 0), 0);
+
+                charts.billetera = new Chart(billeteraCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Ingresos', 'Salidas', 'Balance'],
+                        datasets: [{
+                            data: [totalIngresos, totalSalidas, totalIngresos - totalSalidas],
+                            backgroundColor: ['#10B981', '#EF4444', totalIngresos - totalSalidas >= 0 ? '#3B82F6' : '#F59E0B'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { ...chartOptions, plugins: { legend: { display: false } } }
+                });
+            }
+
+            // Rentabilidad Chart (por mes)
+            const rentabilidadCtx = document.getElementById('rentabilidadChart');
+            if (rentabilidadCtx) {
+                const porMes = {};
+                filteredData.filter(o => o.estatus === 'ENTREGADO').forEach(o => {
+                    if (!o.fecha) return;
+                    const fecha = new Date(o.fecha);
+                    const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+                    if (!porMes[mes]) porMes[mes] = { ventas: 0, ganancia: 0 };
+                    porMes[mes].ventas += o.total;
+                    porMes[mes].ganancia += o.ganancia;
+                });
+
+                const mesesData = Object.entries(porMes).sort((a, b) => a[0].localeCompare(b[0])).slice(-6);
+
+                charts.rentabilidad = new Chart(rentabilidadCtx, {
+                    type: 'line',
+                    data: {
+                        labels: mesesData.map(m => m[0]),
+                        datasets: [
+                            {
+                                label: 'Ventas',
+                                data: mesesData.map(m => m[1].ventas),
+                                borderColor: '#3B82F6',
+                                backgroundColor: 'rgba(59,130,246,0.2)',
+                                fill: false,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Ganancia',
+                                data: mesesData.map(m => m[1].ganancia),
+                                borderColor: '#10B981',
+                                backgroundColor: 'rgba(16,185,129,0.2)',
+                                fill: false,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: chartOptions
                 });
             }
         }
