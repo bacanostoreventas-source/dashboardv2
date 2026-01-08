@@ -2990,41 +2990,105 @@
             const tipoText = tipo === 'ingreso' ? 'Ingresos' : 'Devoluciones';
             const periodoText = periodo === 'dia' ? 'del día' : periodo === 'semana' ? 'de la semana' : 'del mes';
 
-            const html = `
-                <div style="margin-bottom:15px;">
-                    <p><strong>Período:</strong> ${fecha}</p>
-                    <p><strong>Total pedidos:</strong> ${pedidos.length}</p>
-                    <p><strong>Tipo:</strong> ${tipoText}</p>
-                </div>
-                <div style="overflow-x:auto;max-height:400px;">
-                    <table class="data-table table-auto-scale">
-                        <thead style="position:sticky;top:0;background:var(--bg-card);">
-                            <tr>
-                                <th>ID</th>
-                                <th>Guía</th>
-                                <th>Cliente</th>
-                                <th>Producto</th>
-                                <th>Total</th>
-                                <th>${tipo === 'ingreso' ? 'Ganancia' : 'Costo'}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${pedidos.map(o => `
+            let html = '';
+
+            if (tipo === 'ingreso') {
+                // Para ingresos, mostrar cada pedido individual
+                html = `
+                    <div style="margin-bottom:15px;">
+                        <p><strong>Período:</strong> ${fecha}</p>
+                        <p><strong>Total pedidos:</strong> ${pedidos.length}</p>
+                        <p><strong>Tipo:</strong> ${tipoText}</p>
+                    </div>
+                    <div style="overflow-x:auto;max-height:400px;">
+                        <table class="data-table table-auto-scale">
+                            <thead style="position:sticky;top:0;background:var(--bg-card);">
                                 <tr>
-                                    <td><strong>${o.orderId}</strong></td>
-                                    <td style="font-family:monospace;font-size:11px;">${o.guia || '-'}</td>
-                                    <td>${o.cliente || '-'}</td>
-                                    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">${o.producto || '-'}</td>
-                                    <td>${formatCOP(o.total)}</td>
-                                    <td style="color:${tipo === 'ingreso' ? 'var(--emerald)' : 'var(--red)'}">
-                                        ${tipo === 'ingreso' ? '+' : '-'}${formatCOP(tipo === 'ingreso' ? o.ganancia : (o.costoDevolucion || 0))}
-                                    </td>
+                                    <th>ID</th>
+                                    <th>Guía</th>
+                                    <th>Cliente</th>
+                                    <th>Producto</th>
+                                    <th>Total</th>
+                                    <th>Ganancia</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+                            </thead>
+                            <tbody>
+                                ${pedidos.map(o => `
+                                    <tr>
+                                        <td><strong>${o.orderId}</strong></td>
+                                        <td style="font-family:monospace;font-size:11px;">${o.guia || '-'}</td>
+                                        <td>${o.cliente || '-'}</td>
+                                        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">${o.producto || '-'}</td>
+                                        <td>${formatCOP(o.total)}</td>
+                                        <td style="color:var(--emerald)">+${formatCOP(o.ganancia)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                // Para devoluciones, agrupar por guía y mostrar costo solo una vez
+                const guiasAgrupadas = {};
+                pedidos.forEach(o => {
+                    const guiaKey = o.guia || o.orderId;
+                    if (!guiasAgrupadas[guiaKey]) {
+                        guiasAgrupadas[guiaKey] = {
+                            guia: guiaKey,
+                            cliente: o.cliente,
+                            costoDevolucion: o.costoDevolucion || 0,
+                            pedidos: [o],
+                            productos: [o.producto],
+                            totalVenta: o.total
+                        };
+                    } else {
+                        guiasAgrupadas[guiaKey].pedidos.push(o);
+                        guiasAgrupadas[guiaKey].productos.push(o.producto);
+                        guiasAgrupadas[guiaKey].totalVenta += o.total;
+                        // Tomar el costo si aún no se tiene
+                        if (guiasAgrupadas[guiaKey].costoDevolucion === 0 && o.costoDevolucion > 0) {
+                            guiasAgrupadas[guiaKey].costoDevolucion = o.costoDevolucion;
+                        }
+                    }
+                });
+
+                const guiasArray = Object.values(guiasAgrupadas);
+                const totalGuias = guiasArray.length;
+                const totalPedidos = pedidos.length;
+                const totalCosto = guiasArray.reduce((s, g) => s + g.costoDevolucion, 0);
+
+                html = `
+                    <div style="margin-bottom:15px;">
+                        <p><strong>Período:</strong> ${fecha}</p>
+                        <p><strong>Total guías:</strong> ${totalGuias} <span style="color:#9ca3af;font-size:12px;">(${totalPedidos} pedidos)</span></p>
+                        <p><strong>Total costo devolución:</strong> <span style="color:var(--red)">-${formatCOP(totalCosto)}</span></p>
+                    </div>
+                    <div style="overflow-x:auto;max-height:400px;">
+                        <table class="data-table table-auto-scale">
+                            <thead style="position:sticky;top:0;background:var(--bg-card);">
+                                <tr>
+                                    <th>Guía</th>
+                                    <th>Cliente</th>
+                                    <th>Pedidos</th>
+                                    <th>Productos</th>
+                                    <th>Costo Dev.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${guiasArray.map(g => `
+                                    <tr>
+                                        <td style="font-family:monospace;font-size:11px;"><strong>${g.guia}</strong></td>
+                                        <td>${g.cliente || '-'}</td>
+                                        <td style="text-align:center;">${g.pedidos.length}</td>
+                                        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;font-size:11px;">${g.productos.join(', ')}</td>
+                                        <td style="color:var(--red)">-${formatCOP(g.costoDevolucion)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
 
             document.getElementById('modalTitle').textContent = `${tipoText} ${periodoText} ${fecha}`;
             document.getElementById('modalBody').innerHTML = html;
