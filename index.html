@@ -420,7 +420,184 @@
         .kpi-card.pink .kpi-value { color: var(--pink); }
         
         .kpi-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-        
+
+        /* Animaciones de entrada para tarjetas */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .kpi-card {
+            animation: fadeInUp 0.4s ease forwards;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+        .kpi-card:nth-child(2) { animation-delay: 0.1s; }
+        .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+        .kpi-card:nth-child(4) { animation-delay: 0.2s; }
+        .kpi-card:nth-child(5) { animation-delay: 0.25s; }
+        .kpi-card:nth-child(6) { animation-delay: 0.3s; }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        /* Animación para gráficos */
+        .chart-card {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .chart-card:nth-child(1) { animation-delay: 0.1s; }
+        .chart-card:nth-child(2) { animation-delay: 0.2s; }
+
+        /* Pulse animation para alertas importantes */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .alert-high-risk {
+            position: relative;
+        }
+
+        .alert-high-risk::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 14px;
+            border: 2px solid var(--red);
+            animation: pulse 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        /* Skeleton loader para carga */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .skeleton-loader {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--border) 50%, var(--bg-card) 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+            border-radius: 4px;
+        }
+
+        /* Tooltips Informativos */
+        .tooltip {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dotted var(--text-muted);
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            border: 1px solid var(--border);
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: calc(100% + 2px);
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--bg-secondary);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .tooltip:hover::after,
+        .tooltip:hover::before {
+            opacity: 1;
+        }
+
+        /* Progress bar animado */
+        .progress-bar-container {
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .progress-bar-value {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .progress-bar-track {
+            background: var(--bg-main);
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        /* Table container animation */
+        .table-container {
+            animation: fadeInUp 0.4s ease forwards;
+            opacity: 0;
+            animation-delay: 0.2s;
+        }
+
         /* Charts Grid */
         .charts-grid {
             display: grid;
@@ -1888,7 +2065,23 @@
         function formatNumber(n) {
             return n.toLocaleString('es-CO');
         }
-        
+
+        // Render Progress Bar component
+        function renderProgressBar(value, max, label, colorClass = 'emerald') {
+            const percentage = max > 0 ? (value / max * 100).toFixed(1) : 0;
+            return `
+                <div class="progress-bar-container">
+                    <div class="progress-bar-header">
+                        <span class="progress-bar-label">${label}</span>
+                        <span class="progress-bar-value" style="color:var(--${colorClass});">${value} / ${max} (${percentage}%)</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" style="background:var(--${colorClass});width:${percentage}%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
         // Render Resumen
         function renderResumen(stats) {
             return `
@@ -1897,7 +2090,7 @@
                         <div class="kpi-header">
                             <div class="kpi-icon">📦</div>
                         </div>
-                        <div class="kpi-label">Total Pedidos</div>
+                        <div class="kpi-label tooltip" data-tooltip="Total de pedidos según los filtros aplicados">Total Pedidos</div>
                         <div class="kpi-value">${formatNumber(stats.total)}</div>
                         <div class="kpi-subtitle">Filtrados de ${formatNumber(dropiData.orders.length)}</div>
                     </div>
@@ -1906,16 +2099,16 @@
                             <div class="kpi-icon">🎯</div>
                             ${Number(stats.tasaEfectividad) < 75 ? '<span class="kpi-trend down">⚠️ Bajo</span>' : ''}
                         </div>
-                        <div class="kpi-label">Tasa de Efectividad</div>
+                        <div class="kpi-label tooltip" data-tooltip="Entregados / (Entregados + Devoluciones) × 100">Tasa de Efectividad</div>
                         <div class="kpi-value">${stats.tasaEfectividad}%</div>
                         <div class="kpi-subtitle">${formatNumber(stats.entregados)} entregados</div>
                     </div>
-                    <div class="kpi-card ${Number(stats.tasaDevolucion) <= 20 ? 'emerald' : 'red'}">
+                    <div class="kpi-card ${Number(stats.tasaDevolucion) <= 20 ? 'emerald' : 'red'} ${Number(stats.tasaDevolucion) > 25 ? 'alert-high-risk' : ''}">
                         <div class="kpi-header">
                             <div class="kpi-icon">↩️</div>
                             ${Number(stats.tasaDevolucion) > 25 ? '<span class="kpi-trend down">⚠️ Alto</span>' : ''}
                         </div>
-                        <div class="kpi-label">Tasa de Devolución</div>
+                        <div class="kpi-label tooltip" data-tooltip="Devoluciones / (Entregados + Devoluciones) × 100">Tasa de Devolución</div>
                         <div class="kpi-value">${stats.tasaDevolucion}%</div>
                         <div class="kpi-subtitle">${formatNumber(stats.devoluciones)} devueltos</div>
                     </div>
@@ -1923,18 +2116,18 @@
                         <div class="kpi-header">
                             <div class="kpi-icon">⏳</div>
                         </div>
-                        <div class="kpi-label">En Proceso</div>
+                        <div class="kpi-label tooltip" data-tooltip="Pedidos que no están entregados ni devueltos">En Proceso</div>
                         <div class="kpi-value">${formatNumber(stats.enProceso)}</div>
                         <div class="kpi-subtitle">${(stats.enProceso / stats.total * 100).toFixed(1)}% del total</div>
                     </div>
                 </div>
-                
+
                 <div class="kpi-grid">
                     <div class="kpi-card emerald">
                         <div class="kpi-header">
                             <div class="kpi-icon">💰</div>
                         </div>
-                        <div class="kpi-label">Ventas Efectivas</div>
+                        <div class="kpi-label tooltip" data-tooltip="Suma del valor de pedidos entregados">Ventas Efectivas</div>
                         <div class="kpi-value">${formatCOP(stats.ventasEfectivas)}</div>
                         <div class="kpi-subtitle">Solo pedidos entregados</div>
                     </div>
@@ -2705,31 +2898,31 @@
                 <div class="kpi-grid">
                     <div class="kpi-card amber">
                         <div class="kpi-icon">⚠️</div>
-                        <div class="kpi-label">Total Novedades</div>
+                        <div class="kpi-label tooltip" data-tooltip="Pedidos con estatus NOVEDAD o NOVEDAD SOLUCIONADA">Total Novedades</div>
                         <div class="kpi-value">${formatNumber(pedidosConNovedad.length)}</div>
                         <div class="kpi-subtitle">Solo estatus NOVEDAD</div>
                     </div>
-                    <div class="kpi-card red">
+                    <div class="kpi-card red ${novedadesPendientes.length > 10 ? 'alert-high-risk' : ''}">
                         <div class="kpi-icon">🔴</div>
-                        <div class="kpi-label">Pendientes</div>
+                        <div class="kpi-label tooltip" data-tooltip="Novedades que aún no han sido resueltas">Pendientes</div>
                         <div class="kpi-value">${formatNumber(novedadesPendientes.length)}</div>
                         <div class="kpi-subtitle">Requieren atención urgente</div>
                     </div>
                     <div class="kpi-card emerald">
                         <div class="kpi-icon">✅</div>
-                        <div class="kpi-label">Solucionadas</div>
+                        <div class="kpi-label tooltip" data-tooltip="Novedades con estatus NOVEDAD SOLUCIONADA">Solucionadas</div>
                         <div class="kpi-value">${formatNumber(novedadesSolucionadas.length)}</div>
                         <div class="kpi-subtitle">Novedades resueltas</div>
                     </div>
                     <div class="kpi-card ${Number(efectividad) >= 70 ? 'emerald' : Number(efectividad) >= 50 ? 'amber' : 'red'}">
                         <div class="kpi-icon">🎯</div>
-                        <div class="kpi-label">Efectividad de Resolución</div>
+                        <div class="kpi-label tooltip" data-tooltip="Porcentaje de novedades resueltas vs total">Efectividad de Resolución</div>
                         <div class="kpi-value">${efectividad}%</div>
                         <div class="kpi-subtitle">${Number(efectividad) >= 70 ? 'Excelente gestión' : Number(efectividad) >= 50 ? 'Regular - mejorar' : 'Crítico - acción urgente'}</div>
                     </div>
                     <div class="kpi-card blue">
                         <div class="kpi-icon">💰</div>
-                        <div class="kpi-label">Valor en Riesgo</div>
+                        <div class="kpi-label tooltip" data-tooltip="Suma del valor de pedidos con novedad pendiente">Valor en Riesgo</div>
                         <div class="kpi-value">${formatCOP(novedadesPendientes.reduce((s,o) => s + o.total, 0))}</div>
                         <div class="kpi-subtitle">Pedidos pendientes por resolver</div>
                     </div>
@@ -2738,15 +2931,15 @@
                 <!-- Indicador visual de efectividad -->
                 <div class="table-container" style="margin-bottom:20px;padding:20px;">
                     <div class="table-title" style="margin-bottom:15px;">📊 Indicador de Resolución de Novedades</div>
-                    <div style="background:var(--bg-main);border-radius:10px;height:30px;overflow:hidden;position:relative;">
-                        <div style="background:linear-gradient(90deg, var(--emerald), #34d399);height:100%;width:${efectividad}%;transition:width 0.5s;"></div>
-                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:bold;color:white;text-shadow:0 1px 2px rgba(0,0,0,0.5);">
-                            ${efectividad}% Resueltas (${novedadesSolucionadas.length} de ${pedidosConNovedad.length})
-                        </div>
-                    </div>
+                    ${renderProgressBar(
+                        novedadesSolucionadas.length,
+                        pedidosConNovedad.length,
+                        'Novedades Resueltas',
+                        Number(efectividad) >= 70 ? 'emerald' : Number(efectividad) >= 50 ? 'amber' : 'red'
+                    )}
                     <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:#9ca3af;">
                         <span>🔴 ${novedadesPendientes.length} Pendientes</span>
-                        <span>Meta: 70%</span>
+                        <span class="tooltip" data-tooltip="Porcentaje ideal de resolución de novedades">Meta: 70%</span>
                         <span>✅ ${novedadesSolucionadas.length} Solucionadas</span>
                     </div>
                 </div>
