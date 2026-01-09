@@ -2664,15 +2664,41 @@
 
         // Render Novedades
         function renderNovedades(stats) {
-            const pedidosConNovedad = filteredData.filter(o => o.novedad && o.novedad.trim() !== '');
-            const novedadesSolucionadas = pedidosConNovedad.filter(o => o.novedadSolucionada && o.novedadSolucionada.toLowerCase().includes('si'));
-            const novedadesPendientes = pedidosConNovedad.filter(o => !o.novedadSolucionada || !o.novedadSolucionada.toLowerCase().includes('si'));
+            // Solo considerar estatus NOVEDAD y NOVEDAD SOLUCIONADA, excluir ENTREGADO
+            const pedidosConNovedad = filteredData.filter(o => {
+                const estatus = (o.estatus || '').toUpperCase();
+                // Solo NOVEDAD o NOVEDAD SOLUCIONADA, excluir ENTREGADO
+                return (estatus.includes('NOVEDAD') || estatus === 'NOVEDAD SOLUCIONADA') && estatus !== 'ENTREGADO';
+            });
+
+            // Novedades solucionadas = estatus "NOVEDAD SOLUCIONADA" o campo novedadSolucionada = "SI"
+            const novedadesSolucionadas = pedidosConNovedad.filter(o => {
+                const estatus = (o.estatus || '').toUpperCase();
+                const solucionada = (o.novedadSolucionada || '').toLowerCase();
+                return estatus === 'NOVEDAD SOLUCIONADA' || solucionada.includes('si');
+            });
+
+            // Novedades pendientes = las que NO están solucionadas
+            const novedadesPendientes = pedidosConNovedad.filter(o => {
+                const estatus = (o.estatus || '').toUpperCase();
+                const solucionada = (o.novedadSolucionada || '').toLowerCase();
+                return estatus !== 'NOVEDAD SOLUCIONADA' && !solucionada.includes('si');
+            });
+
+            // Aplicar filtro de novedades (pendientes/solucionadas/all)
+            let novedadesFiltradas = pedidosConNovedad;
+            if (window.novedadFilter === 'pendientes') {
+                novedadesFiltradas = novedadesPendientes;
+            } else if (window.novedadFilter === 'solucionadas') {
+                novedadesFiltradas = novedadesSolucionadas;
+            }
 
             const startIdx = (currentPage - 1) * itemsPerPage;
             const endIdx = startIdx + itemsPerPage;
-            const pageData = pedidosConNovedad.slice(startIdx, endIdx);
-            const totalPages = Math.ceil(pedidosConNovedad.length / itemsPerPage);
+            const pageData = novedadesFiltradas.slice(startIdx, endIdx);
+            const totalPages = Math.ceil(novedadesFiltradas.length / itemsPerPage);
 
+            // Efectividad de Resolución de Novedades
             const efectividad = pedidosConNovedad.length > 0 ? (novedadesSolucionadas.length / pedidosConNovedad.length * 100).toFixed(1) : 0;
 
             return `
@@ -2681,39 +2707,60 @@
                         <div class="kpi-icon">⚠️</div>
                         <div class="kpi-label">Total Novedades</div>
                         <div class="kpi-value">${formatNumber(pedidosConNovedad.length)}</div>
-                        <div class="kpi-subtitle">${(pedidosConNovedad.length / filteredData.length * 100).toFixed(1)}% de los pedidos</div>
+                        <div class="kpi-subtitle">Solo estatus NOVEDAD</div>
                     </div>
                     <div class="kpi-card red">
                         <div class="kpi-icon">🔴</div>
                         <div class="kpi-label">Pendientes</div>
                         <div class="kpi-value">${formatNumber(novedadesPendientes.length)}</div>
-                        <div class="kpi-subtitle">Requieren atención</div>
+                        <div class="kpi-subtitle">Requieren atención urgente</div>
                     </div>
                     <div class="kpi-card emerald">
                         <div class="kpi-icon">✅</div>
                         <div class="kpi-label">Solucionadas</div>
                         <div class="kpi-value">${formatNumber(novedadesSolucionadas.length)}</div>
-                        <div class="kpi-subtitle">${efectividad}% resueltas</div>
+                        <div class="kpi-subtitle">Novedades resueltas</div>
                     </div>
                     <div class="kpi-card ${Number(efectividad) >= 70 ? 'emerald' : Number(efectividad) >= 50 ? 'amber' : 'red'}">
                         <div class="kpi-icon">🎯</div>
-                        <div class="kpi-label">Efectividad de Solución</div>
+                        <div class="kpi-label">Efectividad de Resolución</div>
                         <div class="kpi-value">${efectividad}%</div>
-                        <div class="kpi-subtitle">${Number(efectividad) >= 70 ? 'Excelente' : Number(efectividad) >= 50 ? 'Regular' : 'Necesita mejorar'}</div>
+                        <div class="kpi-subtitle">${Number(efectividad) >= 70 ? 'Excelente gestión' : Number(efectividad) >= 50 ? 'Regular - mejorar' : 'Crítico - acción urgente'}</div>
                     </div>
                     <div class="kpi-card blue">
                         <div class="kpi-icon">💰</div>
                         <div class="kpi-label">Valor en Riesgo</div>
                         <div class="kpi-value">${formatCOP(novedadesPendientes.reduce((s,o) => s + o.total, 0))}</div>
-                        <div class="kpi-subtitle">Pedidos con novedad pendiente</div>
+                        <div class="kpi-subtitle">Pedidos pendientes por resolver</div>
+                    </div>
+                </div>
+
+                <!-- Indicador visual de efectividad -->
+                <div class="table-container" style="margin-bottom:20px;padding:20px;">
+                    <div class="table-title" style="margin-bottom:15px;">📊 Indicador de Resolución de Novedades</div>
+                    <div style="background:var(--bg-main);border-radius:10px;height:30px;overflow:hidden;position:relative;">
+                        <div style="background:linear-gradient(90deg, var(--emerald), #34d399);height:100%;width:${efectividad}%;transition:width 0.5s;"></div>
+                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:bold;color:white;text-shadow:0 1px 2px rgba(0,0,0,0.5);">
+                            ${efectividad}% Resueltas (${novedadesSolucionadas.length} de ${pedidosConNovedad.length})
+                        </div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:#9ca3af;">
+                        <span>🔴 ${novedadesPendientes.length} Pendientes</span>
+                        <span>Meta: 70%</span>
+                        <span>✅ ${novedadesSolucionadas.length} Solucionadas</span>
                     </div>
                 </div>
 
                 <div class="table-container">
                     <div class="table-header">
                         <div class="table-title">
-                            Pedidos con Novedades
-                            <span class="table-badge">${formatNumber(pedidosConNovedad.length)} registros</span>
+                            Pedidos con Novedades (Solo estatus NOVEDAD)
+                            <span class="table-badge">${formatNumber(novedadesFiltradas.length)} registros</span>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button class="btn ${!window.novedadFilter || window.novedadFilter === 'all' ? 'btn-primary' : 'btn-secondary'}" onclick="filterNovedades('all')" style="padding:6px 12px;font-size:12px;">Todas</button>
+                            <button class="btn ${window.novedadFilter === 'pendientes' ? 'btn-primary' : 'btn-secondary'}" onclick="filterNovedades('pendientes')" style="padding:6px 12px;font-size:12px;">🔴 Pendientes</button>
+                            <button class="btn ${window.novedadFilter === 'solucionadas' ? 'btn-primary' : 'btn-secondary'}" onclick="filterNovedades('solucionadas')" style="padding:6px 12px;font-size:12px;">✅ Solucionadas</button>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -2724,35 +2771,39 @@
                                     <th>N° Guía</th>
                                     <th>Teléfono</th>
                                     <th>Cliente</th>
+                                    <th>Estatus</th>
                                     <th>Novedad</th>
-                                    <th>Solucionada</th>
+                                    <th>Estado</th>
                                     <th>Fecha Novedad</th>
                                     <th>Solución</th>
-                                    <th>Último Mov.</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${pageData.map(o => `
-                                    <tr class="${o.novedadSolucionada && o.novedadSolucionada.toLowerCase().includes('si') ? '' : 'novedad-pendiente'}">
+                                ${pageData.map(o => {
+                                    const estatus = (o.estatus || '').toUpperCase();
+                                    const solucionada = (o.novedadSolucionada || '').toLowerCase();
+                                    const esSolucionada = estatus === 'NOVEDAD SOLUCIONADA' || solucionada.includes('si');
+                                    return `
+                                    <tr class="${esSolucionada ? '' : 'novedad-pendiente'}">
                                         <td><strong>${o.orderId}</strong></td>
                                         <td style="font-family:monospace;font-size:11px;">${o.guia || '-'}</td>
                                         <td style="font-family:monospace;">${o.telefono || '-'}</td>
                                         <td>${o.cliente || '-'}</td>
+                                        <td><span class="status-badge ${estatus === 'NOVEDAD SOLUCIONADA' ? 'entregado' : 'novedad'}">${o.estatus || '-'}</span></td>
                                         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;" title="${o.novedad}">${(o.novedad || '').substring(0, 30)}${(o.novedad || '').length > 30 ? '...' : ''}</td>
-                                        <td><span class="status-badge ${o.novedadSolucionada && o.novedadSolucionada.toLowerCase().includes('si') ? 'entregado' : 'devolucion'}">${o.novedadSolucionada || 'NO'}</span></td>
+                                        <td><span class="status-badge ${esSolucionada ? 'entregado' : 'devolucion'}">${esSolucionada ? '✅ RESUELTA' : '🔴 PENDIENTE'}</span></td>
                                         <td>${o.fechaNovedad || '-'}</td>
                                         <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${o.solucionNovedad}">${(o.solucionNovedad || '-').substring(0, 20)}</td>
-                                        <td style="font-size:11px;">${o.ultimoMovimiento || '-'}</td>
                                         <td><button class="btn btn-secondary" style="padding:6px 10px;font-size:11px" onclick="showNovedadDetail(${o.id})">Ver</button></td>
                                     </tr>
-                                `).join('')}
+                                `}).join('')}
                             </tbody>
                         </table>
                     </div>
-                    ${pedidosConNovedad.length > itemsPerPage ? `
+                    ${novedadesFiltradas.length > itemsPerPage ? `
                     <div class="pagination">
-                        <span class="pagination-info">Mostrando ${startIdx + 1}-${Math.min(endIdx, pedidosConNovedad.length)} de ${formatNumber(pedidosConNovedad.length)}</span>
+                        <span class="pagination-info">Mostrando ${startIdx + 1}-${Math.min(endIdx, novedadesFiltradas.length)} de ${formatNumber(novedadesFiltradas.length)}</span>
                         <div class="pagination-btns">
                             <button class="page-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>««</button>
                             <button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>«</button>
@@ -2764,6 +2815,13 @@
                     ` : ''}
                 </div>
             `;
+        }
+
+        // Filter novedades by status (pendientes/solucionadas/all)
+        function filterNovedades(filter) {
+            window.novedadFilter = filter;
+            currentPage = 1;
+            renderContent();
         }
 
         // Show novedad detail modal
