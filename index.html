@@ -2804,9 +2804,9 @@
                     ['Pedidos Entregados', stats.entregados],
                     ['Pedidos Devueltos', stats.devoluciones],
                     ['Tasa de Efectividad', stats.tasaEfectividad + '%'],
-                    ['Total Ingresos', formatCurrency(stats.totalIngresos)],
-                    ['Costo Devoluciones', formatCurrency(stats.costoDevoluciones)],
-                    ['Ganancia Neta Billetera', formatCurrency(stats.gananciaNeta)]
+                    ['Total Ingresos', formatCOP(stats.totalIngresos)],
+                    ['Costo Devoluciones', formatCOP(stats.costoDevoluciones)],
+                    ['Ganancia Neta Billetera', formatCOP(stats.gananciaNeta)]
                 ];
                 const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
                 XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
@@ -2838,7 +2838,7 @@
                         'Entregados': c.entregados,
                         'Devoluciones': c.devoluciones,
                         'Efectividad %': c.efectividad.toFixed(1) + '%',
-                        'Costo Devoluciones': formatCurrency(c.costoDevoluciones || 0)
+                        'Costo Devoluciones': formatCOP(c.costoDevoluciones || 0)
                     }));
                     const wsCiudades = XLSX.utils.json_to_sheet(ciudadesData);
                     XLSX.utils.book_append_sheet(wb, wsCiudades, 'Ciudades');
@@ -2862,9 +2862,9 @@
                     const productsData = data.shopifyProducts.map(p => ({
                         'Producto': p.titulo,
                         'Unidades Vendidas': p.productos_vendidos,
-                        'Ventas Brutas': formatCurrency(p.ventas_brutas),
+                        'Ventas Brutas': formatCOP(p.ventas_brutas),
                         'Devoluciones': p.devoluciones,
-                        'Ventas Netas': formatCurrency(p.ventas_netas)
+                        'Ventas Netas': formatCOP(p.ventas_netas)
                     }));
                     const wsProducts = XLSX.utils.json_to_sheet(productsData);
                     XLSX.utils.book_append_sheet(wb, wsProducts, 'Productos Shopify');
@@ -3075,11 +3075,11 @@
                             <div class="comparison-values">
                                 <div class="comparison-current">
                                     <span class="period-name">${currentPeriod.name}</span>
-                                    <span class="period-value">${formatCurrency(currentPeriod.ingresos)}</span>
+                                    <span class="period-value">${formatCOP(currentPeriod.ingresos)}</span>
                                 </div>
                                 <div class="comparison-previous">
                                     <span class="period-name">${previousPeriod.name}</span>
-                                    <span class="period-value">${formatCurrency(previousPeriod.ingresos)}</span>
+                                    <span class="period-value">${formatCOP(previousPeriod.ingresos)}</span>
                                 </div>
                             </div>
                         </div>
