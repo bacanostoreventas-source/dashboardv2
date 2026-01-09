@@ -620,6 +620,123 @@
             animation-delay: 0.2s;
         }
 
+        /* Toast Notification System */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: #1a1a2e;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: auto;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 380px;
+            min-width: 280px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(120%);
+            opacity: 0;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toast-close:hover {
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+        }
+
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            border-radius: 0 0 12px 12px;
+            animation: toastProgress linear forwards;
+        }
+
+        @keyframes toastProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        /* Toast Types */
+        .toast.success {
+            border-left: 4px solid var(--emerald);
+        }
+        .toast.success .toast-icon { color: var(--emerald); }
+        .toast.success .toast-progress { background: var(--emerald); }
+
+        .toast.error {
+            border-left: 4px solid var(--red);
+        }
+        .toast.error .toast-icon { color: var(--red); }
+        .toast.error .toast-progress { background: var(--red); }
+
+        .toast.warning {
+            border-left: 4px solid var(--amber);
+        }
+        .toast.warning .toast-icon { color: var(--amber); }
+        .toast.warning .toast-progress { background: var(--amber); }
+
+        .toast.info {
+            border-left: 4px solid var(--blue);
+        }
+        .toast.info .toast-icon { color: var(--blue); }
+        .toast.info .toast-progress { background: var(--blue); }
+
         /* Charts Grid */
         .charts-grid {
             display: grid;
@@ -1141,6 +1258,9 @@
     </style>
 </head>
 <body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- Login Overlay -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-container">
@@ -1682,6 +1802,8 @@
             const file = input.files[0];
             if (!file) return;
 
+            toastInfo('Cargando datos', 'Procesando archivo Excel...');
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -1703,8 +1825,10 @@
                     saveToLocalStorage();
 
                     renderContent();
+
+                    toastSuccess('Datos cargados', `${data.length} registros importados correctamente`);
                 } catch (error) {
-                    alert('Error al procesar: ' + error.message);
+                    toastError('Error al procesar', error.message);
                     console.error(error);
                 }
             };
@@ -1961,8 +2085,14 @@
             
             currentPage = 1;
             renderContent();
+
+            // Show toast with results count
+            const activeFilters = [dateStart, dateEnd, status, transport, city].filter(f => f).length;
+            if (activeFilters > 0) {
+                toastInfo('Filtros aplicados', `${filteredData.length} pedidos encontrados`);
+            }
         }
-        
+
         // Clear filters
         function clearFilters() {
             document.getElementById('filterDateStart').value = '';
@@ -1976,6 +2106,8 @@
 
             if (dropiData) filteredData = [...dropiData.orders];
             renderContent();
+
+            toastSuccess('Filtros limpiados', 'Mostrando todos los pedidos');
         }
         
         // Show tab
@@ -2086,6 +2218,79 @@
         
         function formatNumber(n) {
             return n.toLocaleString('es-CO');
+        }
+
+        // Toast Notification System
+        function showToast(type, title, message, duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || icons.info}</span>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    ${message ? `<div class="toast-message">${message}</div>` : ''}
+                </div>
+                <button class="toast-close" onclick="closeToast(this.parentElement)">×</button>
+                <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            // Auto remove
+            const autoRemove = setTimeout(() => {
+                closeToast(toast);
+            }, duration);
+
+            // Store timeout reference for manual close
+            toast.dataset.timeout = autoRemove;
+        }
+
+        function closeToast(toast) {
+            if (!toast) return;
+
+            // Clear auto-remove timeout
+            if (toast.dataset.timeout) {
+                clearTimeout(parseInt(toast.dataset.timeout));
+            }
+
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.parentElement.removeChild(toast);
+                }
+            }, 400);
+        }
+
+        // Helper functions for common toasts
+        function toastSuccess(title, message) {
+            showToast('success', title, message);
+        }
+
+        function toastError(title, message) {
+            showToast('error', title, message, 6000);
+        }
+
+        function toastWarning(title, message) {
+            showToast('warning', title, message, 5000);
+        }
+
+        function toastInfo(title, message) {
+            showToast('info', title, message);
         }
 
         // Render Progress Bar component
@@ -4697,8 +4902,14 @@
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
+            toastInfo('Generando PDF', 'Preparando el reporte...');
+
             html2pdf().set(opt).from(wrapper).save().then(() => {
                 document.body.removeChild(wrapper);
+                toastSuccess('PDF exportado', 'El reporte se descargó correctamente');
+            }).catch((error) => {
+                toastError('Error al exportar', 'No se pudo generar el PDF');
+                console.error(error);
             });
         }
 
@@ -4758,8 +4969,13 @@
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
+            toastInfo('Exportando detalle', 'Generando PDF...');
+
             html2pdf().set(opt).from(wrapper).save().then(() => {
                 document.body.removeChild(wrapper);
+                toastSuccess('PDF exportado', 'El detalle se descargó correctamente');
+            }).catch((error) => {
+                toastError('Error al exportar', 'No se pudo generar el PDF');
             });
         }
 
