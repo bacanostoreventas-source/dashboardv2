@@ -2076,15 +2076,6 @@
                     const sheet = workbook.Sheets[sheetName];
                     const data = XLSX.utils.sheet_to_json(sheet);
 
-                    // Validate data before processing
-                    updateLoadingMessage('Validando datos...', 'Verificando integridad');
-                    const validation = validateExcelData(data, 'dropi');
-                    if (!validation.isValid) {
-                        hideLoading();
-                        showValidationResults(validation);
-                        return;
-                    }
-
                     updateLoadingMessage('Procesando pedidos...', `${data.length} registros`);
                     dropiData = processDropiData(data);
                     filteredData = [...dropiData.orders];
@@ -2108,7 +2099,6 @@
                     renderContent();
 
                     hideLoading();
-                    showValidationResults(validation);
                     toastSuccess('Datos cargados', `${dropiData.orders.length} pedidos importados correctamente`);
                 } catch (error) {
                     hideLoading();
@@ -2135,15 +2125,6 @@
                     const sheet = workbook.Sheets[sheetName];
                     const data = XLSX.utils.sheet_to_json(sheet);
 
-                    // Validate data before processing
-                    updateLoadingMessage('Validando datos...', 'Verificando integridad');
-                    const validation = validateExcelData(data, 'dropi');
-                    if (!validation.isValid) {
-                        hideLoading();
-                        showValidationResults(validation);
-                        return;
-                    }
-
                     updateLoadingMessage('Procesando pedidos...', `${data.length} registros`);
                     dropiData = processDropiData(data);
                     filteredData = [...dropiData.orders];
@@ -2160,7 +2141,6 @@
                     renderContent();
 
                     hideLoading();
-                    showValidationResults(validation);
                     toastSuccess('Datos cargados', `${dropiData.orders.length} pedidos importados correctamente`);
                 } catch (error) {
                     hideLoading();
@@ -2657,100 +2637,6 @@
             const subEl = document.getElementById('loadingSubtitle');
             if (msgEl) msgEl.textContent = message;
             if (subtitle && subEl) subEl.textContent = subtitle;
-        }
-
-        // ==========================================
-        // EXCEL DATA VALIDATION
-        // ==========================================
-        function validateExcelData(data, source = 'dropi') {
-            const validationResult = {
-                isValid: true,
-                warnings: [],
-                errors: [],
-                stats: {
-                    totalRows: data.length,
-                    validRows: 0,
-                    invalidRows: 0,
-                    missingFields: {}
-                }
-            };
-
-            if (!data || data.length === 0) {
-                validationResult.isValid = false;
-                validationResult.errors.push('El archivo está vacío o no contiene datos válidos');
-                return validationResult;
-            }
-
-            // Define required fields based on source
-            const requiredFields = source === 'dropi'
-                ? ['fecha_entrega', 'estatus', 'ciudad', 'total_precio', 'guia']
-                : ['fecha', 'productos_vendidos', 'ventas_brutas', 'titulo'];
-
-            // Check first row for headers
-            const firstRow = data[0];
-            const availableHeaders = Object.keys(firstRow).map(h => h.toLowerCase().trim());
-
-            requiredFields.forEach(field => {
-                const fieldLower = field.toLowerCase();
-                const found = availableHeaders.some(h =>
-                    h.includes(fieldLower) || fieldLower.includes(h)
-                );
-                if (!found) {
-                    validationResult.warnings.push(`Campo recomendado "${field}" no encontrado`);
-                }
-            });
-
-            // Validate each row
-            data.forEach((row, index) => {
-                let rowValid = true;
-
-                // Check for empty rows
-                const values = Object.values(row);
-                const nonEmptyValues = values.filter(v => v !== null && v !== undefined && v !== '');
-
-                if (nonEmptyValues.length < 3) {
-                    rowValid = false;
-                    validationResult.stats.invalidRows++;
-                } else {
-                    validationResult.stats.validRows++;
-                }
-
-                // Check for numeric fields
-                if (source === 'dropi') {
-                    const precio = parseFloat(row['total_precio'] || row['Total Precio'] || 0);
-                    if (isNaN(precio) || precio < 0) {
-                        validationResult.warnings.push(`Fila ${index + 1}: precio inválido`);
-                    }
-                }
-            });
-
-            // Generate summary
-            if (validationResult.stats.invalidRows > validationResult.stats.totalRows * 0.1) {
-                validationResult.warnings.push(`${validationResult.stats.invalidRows} filas (${((validationResult.stats.invalidRows/validationResult.stats.totalRows)*100).toFixed(1)}%) tienen datos incompletos`);
-            }
-
-            if (validationResult.errors.length > 0) {
-                validationResult.isValid = false;
-            }
-
-            return validationResult;
-        }
-
-        function showValidationResults(result) {
-            if (!result.isValid) {
-                toastError('Error de Validación', result.errors.join('. '));
-                return false;
-            }
-
-            if (result.warnings.length > 0) {
-                toastWarning('Advertencias de Datos',
-                    `${result.warnings.length} advertencia(s) encontrada(s). Datos cargados con precaución.`);
-            }
-
-            toastInfo('Validación',
-                `${result.stats.validRows} de ${result.stats.totalRows} filas válidas`);
-
-            return true;
         }
 
         // ==========================================
