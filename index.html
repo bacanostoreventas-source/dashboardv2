@@ -737,6 +737,300 @@
         .toast.info .toast-icon { color: var(--blue); }
         .toast.info .toast-progress { background: var(--blue); }
 
+        /* Global Loading Indicator */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--emerald);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .loading-subtext {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Smart Alerts Dashboard */
+        .alerts-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .alerts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .alerts-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alerts-badge {
+            background: var(--red);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-main);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+            transition: all 0.2s;
+        }
+
+        .alert-item:hover {
+            transform: translateX(4px);
+        }
+
+        .alert-item.critical { border-left-color: var(--red); background: rgba(239,68,68,0.1); }
+        .alert-item.warning { border-left-color: var(--amber); background: rgba(245,158,11,0.1); }
+        .alert-item.info { border-left-color: var(--blue); background: rgba(59,130,246,0.1); }
+        .alert-item.success { border-left-color: var(--emerald); background: rgba(16,185,129,0.1); }
+
+        .alert-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .alert-message {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .alert-action {
+            font-size: 12px;
+            color: var(--blue);
+            cursor: pointer;
+            margin-top: 6px;
+            display: inline-block;
+        }
+
+        .alert-action:hover {
+            text-decoration: underline;
+        }
+
+        /* Period Comparison Styles */
+        .comparison-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .comparison-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .comparison-item {
+            background: var(--bg-main);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .comparison-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .comparison-values {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .comparison-current {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .comparison-previous {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .comparison-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .comparison-change.positive {
+            background: var(--emerald-bg);
+            color: var(--emerald);
+        }
+
+        .comparison-change.negative {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+
+        .comparison-change.neutral {
+            background: var(--bg-card);
+            color: var(--text-muted);
+        }
+
+        .comparison-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .comparison-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .comparison-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .comparison-values {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .comparison-current,
+        .comparison-previous {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .comparison-current {
+            flex: 1;
+        }
+
+        .comparison-previous {
+            flex: 1;
+            text-align: right;
+            opacity: 0.7;
+        }
+
+        .period-name {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .period-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .alerts-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .alerts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         /* Charts Grid */
         .charts-grid {
             display: grid;
@@ -1261,6 +1555,15 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-message" id="loadingMessage">Procesando datos...</p>
+            <p class="loading-subtitle" id="loadingSubtitle">Por favor espere</p>
+        </div>
+    </div>
+
     <!-- Login Overlay -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-container">
@@ -1614,6 +1917,7 @@
         let filteredData = null;
         let currentTab = 'resumen';
         let currentPage = 1;
+        let currentStats = null;
         const itemsPerPage = 20;
 
         // Charts instances
@@ -1761,14 +2065,27 @@
         }
 
         function loadDroppedFile(file) {
+            showLoading('Cargando archivo...', file.name);
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
+                    updateLoadingMessage('Procesando datos...', 'Leyendo Excel');
                     const workbook = XLSX.read(e.target.result, { type: 'binary' });
                     const sheetName = workbook.SheetNames[0];
                     const sheet = workbook.Sheets[sheetName];
                     const data = XLSX.utils.sheet_to_json(sheet);
 
+                    // Validate data before processing
+                    updateLoadingMessage('Validando datos...', 'Verificando integridad');
+                    const validation = validateExcelData(data, 'dropi');
+                    if (!validation.isValid) {
+                        hideLoading();
+                        showValidationResults(validation);
+                        return;
+                    }
+
+                    updateLoadingMessage('Procesando pedidos...', `${data.length} registros`);
                     dropiData = processDropiData(data);
                     filteredData = [...dropiData.orders];
 
@@ -1789,9 +2106,14 @@
 
                     populateFilters();
                     renderContent();
+
+                    hideLoading();
+                    showValidationResults(validation);
+                    toastSuccess('Datos cargados', `${dropiData.orders.length} pedidos importados correctamente`);
                 } catch (error) {
+                    hideLoading();
                     console.error('Error:', error);
-                    alert('Error al procesar el archivo');
+                    toastError('Error al procesar', error.message);
                 }
             };
             reader.readAsBinaryString(file);
@@ -1802,16 +2124,27 @@
             const file = input.files[0];
             if (!file) return;
 
-            toastInfo('Cargando datos', 'Procesando archivo Excel...');
+            showLoading('Cargando archivo...', file.name);
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
+                    updateLoadingMessage('Procesando datos...', 'Leyendo Excel');
                     const workbook = XLSX.read(e.target.result, { type: 'binary' });
                     const sheetName = workbook.SheetNames[0];
                     const sheet = workbook.Sheets[sheetName];
                     const data = XLSX.utils.sheet_to_json(sheet);
 
+                    // Validate data before processing
+                    updateLoadingMessage('Validando datos...', 'Verificando integridad');
+                    const validation = validateExcelData(data, 'dropi');
+                    if (!validation.isValid) {
+                        hideLoading();
+                        showValidationResults(validation);
+                        return;
+                    }
+
+                    updateLoadingMessage('Procesando pedidos...', `${data.length} registros`);
                     dropiData = processDropiData(data);
                     filteredData = [...dropiData.orders];
                     document.getElementById('dropiUploadBtn').classList.add('loaded');
@@ -1826,8 +2159,11 @@
 
                     renderContent();
 
-                    toastSuccess('Datos cargados', `${data.length} registros importados correctamente`);
+                    hideLoading();
+                    showValidationResults(validation);
+                    toastSuccess('Datos cargados', `${dropiData.orders.length} pedidos importados correctamente`);
                 } catch (error) {
+                    hideLoading();
                     toastError('Error al procesar', error.message);
                     console.error(error);
                 }
@@ -2167,6 +2503,7 @@
             }
 
             const stats = calculateStats(filteredData);
+            currentStats = stats; // Store for export functions
 
             switch(currentTab) {
                 case 'resumen':
@@ -2291,6 +2628,578 @@
 
         function toastInfo(title, message) {
             showToast('info', title, message);
+        }
+
+        // ==========================================
+        // GLOBAL LOADING INDICATOR
+        // ==========================================
+        function showLoading(message = 'Procesando datos...', subtitle = 'Por favor espere') {
+            const overlay = document.getElementById('loadingOverlay');
+            const msgEl = document.getElementById('loadingMessage');
+            const subEl = document.getElementById('loadingSubtitle');
+
+            if (overlay) {
+                if (msgEl) msgEl.textContent = message;
+                if (subEl) subEl.textContent = subtitle;
+                overlay.classList.add('active');
+            }
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+        }
+
+        function updateLoadingMessage(message, subtitle = null) {
+            const msgEl = document.getElementById('loadingMessage');
+            const subEl = document.getElementById('loadingSubtitle');
+            if (msgEl) msgEl.textContent = message;
+            if (subtitle && subEl) subEl.textContent = subtitle;
+        }
+
+        // ==========================================
+        // EXCEL DATA VALIDATION
+        // ==========================================
+        function validateExcelData(data, source = 'dropi') {
+            const validationResult = {
+                isValid: true,
+                warnings: [],
+                errors: [],
+                stats: {
+                    totalRows: data.length,
+                    validRows: 0,
+                    invalidRows: 0,
+                    missingFields: {}
+                }
+            };
+
+            if (!data || data.length === 0) {
+                validationResult.isValid = false;
+                validationResult.errors.push('El archivo está vacío o no contiene datos válidos');
+                return validationResult;
+            }
+
+            // Define required fields based on source
+            const requiredFields = source === 'dropi'
+                ? ['fecha_entrega', 'estatus', 'ciudad', 'total_precio', 'guia']
+                : ['fecha', 'productos_vendidos', 'ventas_brutas', 'titulo'];
+
+            // Check first row for headers
+            const firstRow = data[0];
+            const availableHeaders = Object.keys(firstRow).map(h => h.toLowerCase().trim());
+
+            requiredFields.forEach(field => {
+                const fieldLower = field.toLowerCase();
+                const found = availableHeaders.some(h =>
+                    h.includes(fieldLower) || fieldLower.includes(h)
+                );
+                if (!found) {
+                    validationResult.warnings.push(`Campo recomendado "${field}" no encontrado`);
+                }
+            });
+
+            // Validate each row
+            data.forEach((row, index) => {
+                let rowValid = true;
+
+                // Check for empty rows
+                const values = Object.values(row);
+                const nonEmptyValues = values.filter(v => v !== null && v !== undefined && v !== '');
+
+                if (nonEmptyValues.length < 3) {
+                    rowValid = false;
+                    validationResult.stats.invalidRows++;
+                } else {
+                    validationResult.stats.validRows++;
+                }
+
+                // Check for numeric fields
+                if (source === 'dropi') {
+                    const precio = parseFloat(row['total_precio'] || row['Total Precio'] || 0);
+                    if (isNaN(precio) || precio < 0) {
+                        validationResult.warnings.push(`Fila ${index + 1}: precio inválido`);
+                    }
+                }
+            });
+
+            // Generate summary
+            if (validationResult.stats.invalidRows > validationResult.stats.totalRows * 0.1) {
+                validationResult.warnings.push(`${validationResult.stats.invalidRows} filas (${((validationResult.stats.invalidRows/validationResult.stats.totalRows)*100).toFixed(1)}%) tienen datos incompletos`);
+            }
+
+            if (validationResult.errors.length > 0) {
+                validationResult.isValid = false;
+            }
+
+            return validationResult;
+        }
+
+        function showValidationResults(result) {
+            if (!result.isValid) {
+                toastError('Error de Validación', result.errors.join('. '));
+                return false;
+            }
+
+            if (result.warnings.length > 0) {
+                toastWarning('Advertencias de Datos',
+                    `${result.warnings.length} advertencia(s) encontrada(s). Datos cargados con precaución.`);
+            }
+
+            toastInfo('Validación',
+                `${result.stats.validRows} de ${result.stats.totalRows} filas válidas`);
+
+            return true;
+        }
+
+        // ==========================================
+        // SMART ALERTS DASHBOARD
+        // ==========================================
+        function generateSmartAlerts(stats, orders) {
+            const alerts = [];
+
+            // Alert 1: Low effectiveness rate
+            const efectividad = parseFloat(stats.tasaEfectividad);
+            if (efectividad < 70) {
+                alerts.push({
+                    type: 'critical',
+                    icon: '🚨',
+                    title: 'Efectividad Crítica',
+                    message: `La tasa de efectividad (${efectividad}%) está muy por debajo del objetivo del 80%`,
+                    action: 'Revisar ciudades y transportadoras con mayor tasa de devolución'
+                });
+            } else if (efectividad < 80) {
+                alerts.push({
+                    type: 'warning',
+                    icon: '⚠️',
+                    title: 'Efectividad por Debajo del Objetivo',
+                    message: `La tasa de efectividad (${efectividad}%) está por debajo del objetivo del 80%`,
+                    action: 'Analizar causas de devoluciones recientes'
+                });
+            }
+
+            // Alert 2: High devolution cost
+            const costoDevoluciones = stats.costoDevoluciones || 0;
+            const totalIngresos = stats.totalIngresos || 0;
+            if (totalIngresos > 0) {
+                const porcentajeCostos = (costoDevoluciones / totalIngresos * 100);
+                if (porcentajeCostos > 15) {
+                    alerts.push({
+                        type: 'critical',
+                        icon: '💸',
+                        title: 'Costos de Devolución Elevados',
+                        message: `Los costos de devolución representan ${porcentajeCostos.toFixed(1)}% de los ingresos`,
+                        action: 'Identificar productos con mayor tasa de devolución'
+                    });
+                } else if (porcentajeCostos > 10) {
+                    alerts.push({
+                        type: 'warning',
+                        icon: '💰',
+                        title: 'Costos de Devolución Moderados',
+                        message: `Los costos de devolución representan ${porcentajeCostos.toFixed(1)}% de los ingresos`,
+                        action: 'Monitorear tendencia de costos'
+                    });
+                }
+            }
+
+            // Alert 3: High pending orders (Novedades)
+            const novedades = orders.filter(o => o.estatus === 'NOVEDAD').length;
+            const totalOrders = orders.length;
+            if (totalOrders > 0) {
+                const porcentajeNovedades = (novedades / totalOrders * 100);
+                if (porcentajeNovedades > 20) {
+                    alerts.push({
+                        type: 'critical',
+                        icon: '📋',
+                        title: 'Alto Volumen de Novedades',
+                        message: `${novedades} pedidos (${porcentajeNovedades.toFixed(1)}%) tienen novedad pendiente`,
+                        action: 'Gestionar novedades urgentemente para evitar devoluciones'
+                    });
+                } else if (porcentajeNovedades > 10) {
+                    alerts.push({
+                        type: 'warning',
+                        icon: '📝',
+                        title: 'Novedades Acumulándose',
+                        message: `${novedades} pedidos (${porcentajeNovedades.toFixed(1)}%) tienen novedad`,
+                        action: 'Revisar y resolver novedades pendientes'
+                    });
+                }
+            }
+
+            // Alert 4: Cities with high devolution rate
+            if (stats.ciudadesEfectividad) {
+                const ciudadesCriticas = stats.ciudadesEfectividad
+                    .filter(c => c.efectividad < 60 && c.total >= 5)
+                    .slice(0, 3);
+
+                if (ciudadesCriticas.length > 0) {
+                    alerts.push({
+                        type: 'warning',
+                        icon: '🏙️',
+                        title: 'Ciudades con Baja Efectividad',
+                        message: `${ciudadesCriticas.map(c => `${c.ciudad} (${c.efectividad.toFixed(0)}%)`).join(', ')}`,
+                        action: 'Evaluar transportadoras alternativas para estas ciudades'
+                    });
+                }
+            }
+
+            // Alert 5: Transportadoras with issues
+            if (stats.transportadorasEfectividad) {
+                const transportadorasCriticas = stats.transportadorasEfectividad
+                    .filter(t => t.efectividad < 70 && t.total >= 5)
+                    .slice(0, 3);
+
+                if (transportadorasCriticas.length > 0) {
+                    alerts.push({
+                        type: 'warning',
+                        icon: '🚚',
+                        title: 'Transportadoras con Baja Efectividad',
+                        message: `${transportadorasCriticas.map(t => `${t.transportadora} (${t.efectividad.toFixed(0)}%)`).join(', ')}`,
+                        action: 'Considerar cambiar de transportadora en rutas afectadas'
+                    });
+                }
+            }
+
+            // Positive alert if everything is good
+            if (alerts.length === 0 && totalOrders > 10) {
+                alerts.push({
+                    type: 'success',
+                    icon: '✅',
+                    title: '¡Todo en Orden!',
+                    message: 'No se detectaron problemas críticos en las métricas actuales',
+                    action: 'Continuar monitoreando el rendimiento'
+                });
+            }
+
+            return alerts;
+        }
+
+        function renderSmartAlerts(alerts) {
+            if (!alerts || alerts.length === 0) return '';
+
+            return `
+                <div class="alerts-container">
+                    <h3 class="section-title" style="margin-bottom: 16px;">
+                        <span style="margin-right: 8px;">🔔</span> Alertas Inteligentes
+                    </h3>
+                    <div class="alerts-list">
+                        ${alerts.map(alert => `
+                            <div class="alert-item ${alert.type}">
+                                <div class="alert-icon">${alert.icon}</div>
+                                <div class="alert-content">
+                                    <div class="alert-title">${alert.title}</div>
+                                    <div class="alert-message">${alert.message}</div>
+                                    <div class="alert-action">💡 ${alert.action}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // ADVANCED EXCEL EXPORT (Multiple Sheets)
+        // ==========================================
+        function exportToExcelAdvanced(data, stats, filename = 'dashboard_export') {
+            showLoading('Generando Excel...', 'Preparando múltiples hojas');
+
+            try {
+                const wb = XLSX.utils.book_new();
+
+                // Sheet 1: Resumen General
+                const resumenData = [
+                    ['RESUMEN GENERAL DEL DASHBOARD'],
+                    ['Generado el:', new Date().toLocaleString('es-CO')],
+                    [''],
+                    ['Métrica', 'Valor'],
+                    ['Total Pedidos', stats.total],
+                    ['Pedidos Entregados', stats.entregados],
+                    ['Pedidos Devueltos', stats.devoluciones],
+                    ['Tasa de Efectividad', stats.tasaEfectividad + '%'],
+                    ['Total Ingresos', formatCurrency(stats.totalIngresos)],
+                    ['Costo Devoluciones', formatCurrency(stats.costoDevoluciones)],
+                    ['Ganancia Neta Billetera', formatCurrency(stats.gananciaNeta)]
+                ];
+                const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+                XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+
+                // Sheet 2: Detalle de Pedidos
+                if (data.orders && data.orders.length > 0) {
+                    const ordersForExport = data.orders.map(o => ({
+                        'ID': o.id_order || o.id,
+                        'Fecha': o.fecha_entrega || o.fecha,
+                        'Cliente': o.cliente || o.nombre_cliente,
+                        'Ciudad': o.ciudad,
+                        'Estatus': o.estatus,
+                        'Producto': o.producto || o.sku,
+                        'Cantidad': o.cantidad || 1,
+                        'Precio Total': o.total_precio,
+                        'Costo Envío': o.flete || 0,
+                        'Transportadora': o.transportadora,
+                        'Guía': o.guia
+                    }));
+                    const wsPedidos = XLSX.utils.json_to_sheet(ordersForExport);
+                    XLSX.utils.book_append_sheet(wb, wsPedidos, 'Pedidos');
+                }
+
+                // Sheet 3: Efectividad por Ciudad
+                if (stats.ciudadesEfectividad && stats.ciudadesEfectividad.length > 0) {
+                    const ciudadesData = stats.ciudadesEfectividad.map(c => ({
+                        'Ciudad': c.ciudad,
+                        'Total Pedidos': c.total,
+                        'Entregados': c.entregados,
+                        'Devoluciones': c.devoluciones,
+                        'Efectividad %': c.efectividad.toFixed(1) + '%',
+                        'Costo Devoluciones': formatCurrency(c.costoDevoluciones || 0)
+                    }));
+                    const wsCiudades = XLSX.utils.json_to_sheet(ciudadesData);
+                    XLSX.utils.book_append_sheet(wb, wsCiudades, 'Ciudades');
+                }
+
+                // Sheet 4: Efectividad por Transportadora
+                if (stats.transportadorasEfectividad && stats.transportadorasEfectividad.length > 0) {
+                    const transData = stats.transportadorasEfectividad.map(t => ({
+                        'Transportadora': t.transportadora,
+                        'Total Pedidos': t.total,
+                        'Entregados': t.entregados,
+                        'Devoluciones': t.devoluciones,
+                        'Efectividad %': t.efectividad.toFixed(1) + '%'
+                    }));
+                    const wsTrans = XLSX.utils.json_to_sheet(transData);
+                    XLSX.utils.book_append_sheet(wb, wsTrans, 'Transportadoras');
+                }
+
+                // Sheet 5: Productos (if Shopify data exists)
+                if (data.shopifyProducts && data.shopifyProducts.length > 0) {
+                    const productsData = data.shopifyProducts.map(p => ({
+                        'Producto': p.titulo,
+                        'Unidades Vendidas': p.productos_vendidos,
+                        'Ventas Brutas': formatCurrency(p.ventas_brutas),
+                        'Devoluciones': p.devoluciones,
+                        'Ventas Netas': formatCurrency(p.ventas_netas)
+                    }));
+                    const wsProducts = XLSX.utils.json_to_sheet(productsData);
+                    XLSX.utils.book_append_sheet(wb, wsProducts, 'Productos Shopify');
+                }
+
+                // Sheet 6: Novedades
+                if (data.orders) {
+                    const novedades = data.orders.filter(o =>
+                        o.estatus === 'NOVEDAD' || o.estatus === 'NOVEDAD SOLUCIONADA'
+                    );
+                    if (novedades.length > 0) {
+                        const novedadesData = novedades.map(n => ({
+                            'ID': n.id_order || n.id,
+                            'Fecha': n.fecha_entrega || n.fecha,
+                            'Cliente': n.cliente || n.nombre_cliente,
+                            'Ciudad': n.ciudad,
+                            'Estatus': n.estatus,
+                            'Transportadora': n.transportadora,
+                            'Guía': n.guia
+                        }));
+                        const wsNovedades = XLSX.utils.json_to_sheet(novedadesData);
+                        XLSX.utils.book_append_sheet(wb, wsNovedades, 'Novedades');
+                    }
+                }
+
+                // Generate and download
+                const timestamp = new Date().toISOString().split('T')[0];
+                XLSX.writeFile(wb, `${filename}_${timestamp}.xlsx`);
+
+                hideLoading();
+                toastSuccess('Excel Generado', 'Archivo descargado con múltiples hojas de análisis');
+
+            } catch (error) {
+                hideLoading();
+                toastError('Error', 'No se pudo generar el archivo Excel: ' + error.message);
+                console.error('Excel export error:', error);
+            }
+        }
+
+        // ==========================================
+        // PERIOD COMPARISON (Current vs Previous)
+        // ==========================================
+        function calculatePeriodComparison(orders, currentMonth = null, currentYear = null) {
+            const now = new Date();
+            const targetMonth = currentMonth !== null ? currentMonth : now.getMonth();
+            const targetYear = currentYear !== null ? currentYear : now.getFullYear();
+
+            // Calculate previous month
+            let prevMonth = targetMonth - 1;
+            let prevYear = targetYear;
+            if (prevMonth < 0) {
+                prevMonth = 11;
+                prevYear -= 1;
+            }
+
+            // Filter orders by period
+            const currentPeriod = orders.filter(o => {
+                const fecha = new Date(o.fecha_entrega || o.fecha);
+                return fecha.getMonth() === targetMonth && fecha.getFullYear() === targetYear;
+            });
+
+            const previousPeriod = orders.filter(o => {
+                const fecha = new Date(o.fecha_entrega || o.fecha);
+                return fecha.getMonth() === prevMonth && fecha.getFullYear() === prevYear;
+            });
+
+            // Calculate metrics for each period
+            const calcMetrics = (periodOrders) => {
+                const total = periodOrders.length;
+                const entregados = periodOrders.filter(o => o.estatus === 'ENTREGADO').length;
+                const devoluciones = periodOrders.filter(o =>
+                    o.estatus === 'DEVOLUCION' || o.estatus === 'DEVOLUCIÓN'
+                ).length;
+                const efectividad = (entregados + devoluciones) > 0
+                    ? (entregados / (entregados + devoluciones) * 100)
+                    : 0;
+                const ingresos = periodOrders
+                    .filter(o => o.estatus === 'ENTREGADO')
+                    .reduce((sum, o) => sum + parseFloat(o.total_precio || 0), 0);
+
+                return { total, entregados, devoluciones, efectividad, ingresos };
+            };
+
+            const current = calcMetrics(currentPeriod);
+            const previous = calcMetrics(previousPeriod);
+
+            // Calculate changes
+            const calcChange = (curr, prev) => {
+                if (prev === 0) return curr > 0 ? 100 : 0;
+                return ((curr - prev) / prev * 100);
+            };
+
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                              'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+            return {
+                currentPeriod: {
+                    name: `${monthNames[targetMonth]} ${targetYear}`,
+                    ...current
+                },
+                previousPeriod: {
+                    name: `${monthNames[prevMonth]} ${prevYear}`,
+                    ...previous
+                },
+                changes: {
+                    total: calcChange(current.total, previous.total),
+                    entregados: calcChange(current.entregados, previous.entregados),
+                    devoluciones: calcChange(current.devoluciones, previous.devoluciones),
+                    efectividad: current.efectividad - previous.efectividad,
+                    ingresos: calcChange(current.ingresos, previous.ingresos)
+                }
+            };
+        }
+
+        function renderPeriodComparison(comparison) {
+            if (!comparison) return '';
+
+            const { currentPeriod, previousPeriod, changes } = comparison;
+
+            const renderChange = (value, isPercentage = false, invertColors = false) => {
+                const formatted = isPercentage
+                    ? `${value >= 0 ? '+' : ''}${value.toFixed(1)}pp`
+                    : `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
+                let colorClass = value >= 0 ? 'positive' : 'negative';
+                if (invertColors) colorClass = value >= 0 ? 'negative' : 'positive';
+                return `<span class="comparison-change ${colorClass}">${formatted}</span>`;
+            };
+
+            return `
+                <div class="comparison-section">
+                    <h3 class="section-title" style="margin-bottom: 16px;">
+                        <span style="margin-right: 8px;">📊</span> Comparación de Períodos
+                    </h3>
+                    <div class="comparison-grid">
+                        <div class="comparison-card">
+                            <div class="comparison-header">
+                                <span class="comparison-label">Total Pedidos</span>
+                                ${renderChange(changes.total)}
+                            </div>
+                            <div class="comparison-values">
+                                <div class="comparison-current">
+                                    <span class="period-name">${currentPeriod.name}</span>
+                                    <span class="period-value">${formatNumber(currentPeriod.total)}</span>
+                                </div>
+                                <div class="comparison-previous">
+                                    <span class="period-name">${previousPeriod.name}</span>
+                                    <span class="period-value">${formatNumber(previousPeriod.total)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comparison-card">
+                            <div class="comparison-header">
+                                <span class="comparison-label">Entregados</span>
+                                ${renderChange(changes.entregados)}
+                            </div>
+                            <div class="comparison-values">
+                                <div class="comparison-current">
+                                    <span class="period-name">${currentPeriod.name}</span>
+                                    <span class="period-value">${formatNumber(currentPeriod.entregados)}</span>
+                                </div>
+                                <div class="comparison-previous">
+                                    <span class="period-name">${previousPeriod.name}</span>
+                                    <span class="period-value">${formatNumber(previousPeriod.entregados)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comparison-card">
+                            <div class="comparison-header">
+                                <span class="comparison-label">Devoluciones</span>
+                                ${renderChange(changes.devoluciones, false, true)}
+                            </div>
+                            <div class="comparison-values">
+                                <div class="comparison-current">
+                                    <span class="period-name">${currentPeriod.name}</span>
+                                    <span class="period-value">${formatNumber(currentPeriod.devoluciones)}</span>
+                                </div>
+                                <div class="comparison-previous">
+                                    <span class="period-name">${previousPeriod.name}</span>
+                                    <span class="period-value">${formatNumber(previousPeriod.devoluciones)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comparison-card">
+                            <div class="comparison-header">
+                                <span class="comparison-label">Efectividad</span>
+                                ${renderChange(changes.efectividad, true)}
+                            </div>
+                            <div class="comparison-values">
+                                <div class="comparison-current">
+                                    <span class="period-name">${currentPeriod.name}</span>
+                                    <span class="period-value">${currentPeriod.efectividad.toFixed(1)}%</span>
+                                </div>
+                                <div class="comparison-previous">
+                                    <span class="period-name">${previousPeriod.name}</span>
+                                    <span class="period-value">${previousPeriod.efectividad.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comparison-card" style="grid-column: span 2;">
+                            <div class="comparison-header">
+                                <span class="comparison-label">Ingresos</span>
+                                ${renderChange(changes.ingresos)}
+                            </div>
+                            <div class="comparison-values">
+                                <div class="comparison-current">
+                                    <span class="period-name">${currentPeriod.name}</span>
+                                    <span class="period-value">${formatCurrency(currentPeriod.ingresos)}</span>
+                                </div>
+                                <div class="comparison-previous">
+                                    <span class="period-name">${previousPeriod.name}</span>
+                                    <span class="period-value">${formatCurrency(previousPeriod.ingresos)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         // Render Progress Bar component
@@ -2449,6 +3358,16 @@
                             <canvas id="citiesChart"></canvas>
                         </div>
                     </div>
+                </div>
+
+                ${renderSmartAlerts(generateSmartAlerts(stats, filteredData))}
+
+                ${renderPeriodComparison(calculatePeriodComparison(dropiData.orders))}
+
+                <div class="export-section" style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="exportToExcelAdvanced({orders: filteredData, shopifyProducts: null}, currentStats)">
+                        📊 Exportar Excel Avanzado
+                    </button>
                 </div>
             `;
         }
@@ -4476,6 +5395,8 @@
         }
 
         function downloadPDF() {
+            showLoading('Generando PDF...', 'Esto puede tomar unos segundos');
+
             const tabTitles = {
                 resumen: 'Resumen_General',
                 pedidos: 'Detalle_Pedidos',
@@ -4505,7 +5426,13 @@
             };
 
             html2pdf().set(opt).from(wrapper).save().then(() => {
+                hideLoading();
                 closePDFPreview();
+                toastSuccess('PDF Generado', 'El archivo ha sido descargado');
+            }).catch(error => {
+                hideLoading();
+                toastError('Error', 'No se pudo generar el PDF');
+                console.error(error);
             });
         }
 
